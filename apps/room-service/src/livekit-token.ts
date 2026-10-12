@@ -7,7 +7,10 @@ export async function createParticipantToken(
   roomId: string,
   identity: string,
 ): Promise<string> {
-  const token = new AccessToken(config.LIVEKIT_API_KEY, config.LIVEKIT_API_SECRET, { identity });
+  if (!config.LIVEKIT_API_KEY || !config.LIVEKIT_API_SECRET || !config.LIVEKIT_URL) {
+    throw new Error('LiveKit is not configured.');
+  }
+  const token = new AccessToken(config.LIVEKIT_API_KEY, config.LIVEKIT_API_SECRET, { identity, ttl: '10m' });
   token.addGrant({
     canPublish: true,
     canSubscribe: true,
