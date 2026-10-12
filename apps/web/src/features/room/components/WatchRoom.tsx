@@ -9,6 +9,7 @@ import { RoomDivider } from "./RoomDivider";
 import { ExtensionSetup } from "./ExtensionSetup";
 import { RoomChat } from "./RoomChat";
 import { SourceSetup } from "./SourceSetup";
+import { MediaCall } from './MediaCall';
 import type { CSSProperties } from "react";
 
 const sourceCopy: Record<
@@ -227,6 +228,7 @@ export function WatchRoom({
               <h2>In the room {connection.members.length}</h2>
               <button onClick={() => setModal("invite")}>+ Invite</button>
             </div>
+            <MediaCall session={room} members={connection.members}>
             {connection.members.some((member) => member.id === room.identity) && <div className={`call-card ${zoom ? "enlarged" : ""}`}>
               <span className="member-label">
                 {room.displayName}
@@ -266,9 +268,7 @@ export function WatchRoom({
                 <div className="avatar"><span /><b /></div>
               </div>
             ))}
-            <p className="preview-note">
-              Camera and microphone connect in the next phase.
-            </p>
+            </MediaCall>
           </section>
           <p className="sidebar-note">
             {connection.status} · private invitation room.

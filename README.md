@@ -19,7 +19,15 @@ Kindred is a private watch-together app. Private rooms and shared text chat work
 - TypeScript room service with typed room state and signed invite validation.
 - Automated tests and production builds.
 
-LiveKit media is not connected yet. Room/chat delivery is verified in two browser sessions, not two physical devices.
+LiveKit call UI is integrated but requires your media server configuration; live audio/video delivery has not been verified. Room/chat delivery is verified in two browser sessions, not two physical devices.
+
+## Camera and microphone setup
+
+Set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` in the room service's ignored `.env.local`, then restart the service. Use a LiveKit Cloud project or your own LiveKit server. Never place the API secret in the web app.
+
+In a room, select **Join call**. Camera and microphone start off; hover over your card to enable them. Your own preview is mirrored; outgoing video is unchanged. If the browser blocks sound, select **Enable call audio**. **Leave call** disconnects media without leaving chat.
+
+Use HTTPS outside localhost. Two-device video/audio, permissions, reconnection and device cleanup still require live verification before release.
 
 ## What you need
 

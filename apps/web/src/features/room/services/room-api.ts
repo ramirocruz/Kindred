@@ -21,6 +21,7 @@ export async function requestRoomSession(
   });
 
   if (!response.ok) {
+    if (response.status === 503) throw new Error('Calls are not configured. Set the LiveKit server credentials in the room service.');
     throw new Error('Kindred could not start the room session.');
   }
 
