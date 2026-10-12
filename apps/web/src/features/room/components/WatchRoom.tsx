@@ -5,6 +5,7 @@ import { Dialog } from "./Dialog";
 import { MediaIcon } from "./MediaIcon";
 import { RoomDivider } from "./RoomDivider";
 import { ExtensionSetup } from "./ExtensionSetup";
+import { RoomChat } from "./RoomChat";
 import type { CSSProperties } from "react";
 
 const sourceCopy: Record<
@@ -50,7 +51,6 @@ export function WatchRoom({
   const [modal, setModal] = useState<
     "invite" | "setup" | "settings" | "source" | null
   >(null);
-  const [chatOpen, setChatOpen] = useState(false);
   const [reactions, setReactions] = useState(room.reactions);
   const [interactive, setInteractive] = useState(false);
   const [zoom, setZoom] = useState(false);
@@ -259,27 +259,7 @@ export function WatchRoom({
           <p className="sidebar-note">
             Local preview · online invites coming next.
           </p>
-          <section className="chat">
-            <button
-              className="chat-heading"
-              aria-expanded={chatOpen}
-              onClick={() => setChatOpen(!chatOpen)}
-            >
-              Messages <span>{chatOpen ? "−" : "+"}</span>
-            </button>
-            {chatOpen && (
-              <div className="chat-content">
-                <p>
-                  Messages will appear here when online rooms are connected.
-                </p>
-                <input
-                  disabled
-                  aria-label="Chat unavailable in local preview"
-                  placeholder="Say something nice…"
-                />
-              </div>
-            )}
-          </section>
+          <RoomChat displayName={room.displayName} />
         </aside>
       </div>
       {notice && <p role="status">{notice}</p>}

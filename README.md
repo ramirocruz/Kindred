@@ -9,6 +9,7 @@ Kindred is a private watch-together app. Friends will be able to watch media, ch
 
 - Original-style landing page, room setup, source navigation, settings, invite/leave dialogs, collapsible chat, and fullscreen layout.
 - Local room preview uses your display name; no fake participants are added.
+- Messages accept typing and Enter/send, and stay while you collapse chat. They are local to this preview and disappear when you leave or reload; other members cannot receive them yet.
 - TypeScript room service with typed room state and signed invite validation.
 - Automated tests and production builds.
 
@@ -44,7 +45,7 @@ npm run dev
 
 Open the address printed in the terminal, normally `http://localhost:5173`.
 
-Enter your name and select **Create a private room** to explore the interface. Source playback, shared invites, messages, and calls still need integration; unavailable actions are labelled or disabled. This does not create a real online room.
+Enter your name and select **Create a private room** to explore the interface. Source playback, shared invites, online message delivery, and calls still need integration; unavailable actions are labelled or disabled. This does not create a real online room.
 
 ## Run the room service
 

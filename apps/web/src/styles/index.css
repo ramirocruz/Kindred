@@ -504,6 +504,11 @@ i {
   color: #aebbad;
   font-size: 13px;
 }
+.chat-compose { display: flex; gap: 8px; }
+.chat-compose input { min-width: 0; flex: 1; }
+.chat-messages { max-height: 220px; overflow-y: auto; overflow-wrap: anywhere; }
+.chat-messages strong, .chat-messages span { display: block; }
+.chat-messages span { white-space: pre-wrap; }
 .chat-content input {
   width: 100%;
 }
