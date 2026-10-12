@@ -467,6 +467,8 @@ i {
   outline: 2px solid #d5ff65;
   outline-offset: -2px;
 }
+.call-card + .call-card { margin-top: 12px; }
+.connection-notice { position: fixed; z-index: 100; bottom: 12px; left: 12px; background: #17221e; padding: 12px; border: 1px solid #536e60; border-radius: 12px; }
 .member-label {
   position: absolute;
   top: 10px;

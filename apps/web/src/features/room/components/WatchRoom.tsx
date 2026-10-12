@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { sources } from "../local-room";
-import type { LocalRoom, Source } from "../local-room";
+import type { Source } from "../local-room";
+import type { RoomSession } from '../services/session';
+import { useRoomConnection } from '../useRoomConnection';
 import { Dialog } from "./Dialog";
 import { MediaIcon } from "./MediaIcon";
 import { RoomDivider } from "./RoomDivider";
@@ -44,9 +46,11 @@ export function WatchRoom({
   room,
   onLeave,
 }: {
-  room: LocalRoom;
+  room: RoomSession;
   onLeave: () => void;
 }): React.JSX.Element {
+  const connection = useRoomConnection(room);
+  const inviteUrl = `${location.origin}${location.pathname}#invite=${room.invite}`;
   const [source, setSource] = useState<Source | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [modal, setModal] = useState<
@@ -76,7 +80,7 @@ export function WatchRoom({
         </button>
         <span className="room-pill">
           <i />
-          {room.name} · Local preview · 1 here
+          {room.name} · {connection.status} · {connection.members.length} here
         </span>
         <div className="header-actions">
           <button
@@ -220,10 +224,10 @@ export function WatchRoom({
         <aside className="room-sidebar">
           <section className="participants">
             <div className="panel-heading">
-              <h2>In the room 1</h2>
+              <h2>In the room {connection.members.length}</h2>
               <button onClick={() => setModal("invite")}>+ Invite</button>
             </div>
-            <div className={`call-card ${zoom ? "enlarged" : ""}`}>
+            {connection.members.some((member) => member.id === room.identity) && <div className={`call-card ${zoom ? "enlarged" : ""}`}>
               <span className="member-label">
                 {room.displayName}
                 <i />
@@ -255,15 +259,21 @@ export function WatchRoom({
                   <MediaIcon name="microphone" muted />
                 </button>
               </div>
-            </div>
+            </div>}
+            {connection.members.filter((member) => member.id !== room.identity).map((member) => (
+              <div className="call-card" key={member.id}>
+                <span className="member-label">{member.displayName}<i /></span>
+                <div className="avatar"><span /><b /></div>
+              </div>
+            ))}
             <p className="preview-note">
               Camera and microphone connect in the next phase.
             </p>
           </section>
           <p className="sidebar-note">
-            Local preview · online invites coming next.
+            {connection.status} · private invitation room.
           </p>
-          <RoomChat displayName={room.displayName} />
+          <RoomChat connection={connection} />
         </aside>
       </div>
       {notice && <p role="status">{notice}</p>}
@@ -274,7 +284,7 @@ export function WatchRoom({
           eyebrow={modal === "invite" ? "Private room invite" : "Kindred room"}
           title={
             modal === "invite"
-              ? "Bring your people together."
+              ? "Send this exact room link."
               : modal === "settings"
                 ? "Make it yours."
                 : "Shared tab control"
@@ -305,11 +315,15 @@ export function WatchRoom({
             <p className="preview-note">Settings apply to this local preview. Guest permissions require online rooms.</p>
             </>
           ) : (
+            <>
             <p className="dialog-description">
               {modal === "invite"
-                ? "This room currently runs on your device. Shareable private links will be enabled when online rooms are connected."
+                ? "Anyone with this link can join. It expires after 24 hours or a service restart. Keep it private."
                 : "GDrive uses playback controls. Screen share offers viewing or interactive control. Extension pairing is being migrated; the new room cannot link a tab yet."}
             </p>
+            <label className="field">Room link<input readOnly value={inviteUrl} onFocus={(event) => event.target.select()} /></label>
+            <button className="primary-button" onClick={() => void navigator.clipboard.writeText(inviteUrl).then(() => setNotice('Invite link copied.')).catch(() => setNotice('Select and copy the room link manually.'))}>Copy link</button>
+            </>
           )}
           <div className="dialog-actions">
             {modal === "invite" && (

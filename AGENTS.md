@@ -41,6 +41,8 @@ Before every task, read `Context/README.md`, `Context/index.md`, and the documen
 
 ## Established Patterns
 
+- Prefer established, widely adopted libraries already in the stack. Add dependencies only for a concrete need; avoid custom substitutes for maintained transport, validation, or media libraries.
+
 - Interface: React + Vite + TypeScript.
 - Styling: Tailwind CSS.
 - Room coordination: TypeScript + Socket.IO service.

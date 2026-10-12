@@ -4,13 +4,16 @@ import type { LocalRoom } from "../local-room";
 import { Dialog } from "./Dialog";
 export function Landing({
   onCreate,
+  onJoin,
 }: {
   onCreate: (room: LocalRoom) => void;
+  onJoin: (name: string, invite: string) => void;
 }): React.JSX.Element {
   const [name, setName] = useState("");
   const [roomName, setRoomName] = useState("Friday Night Picks");
   const [reactions, setReactions] = useState(true);
-  const [modal, setModal] = useState<"create" | "join" | null>(null);
+  const [modal, setModal] = useState<"create" | "join" | null>(location.hash.startsWith('#invite=') ? 'join' : null);
+  const [inviteLink, setInviteLink] = useState(location.hash.startsWith('#invite=') ? location.href : '');
   return (
     <main className="landing">
       <section className="hero">
@@ -64,7 +67,7 @@ export function Landing({
           </article>
         </div>
         <p className="preview-note">
-          Local preview · online rooms and calls are coming next.
+          Private rooms and chat · media playback and calls are coming next.
         </p>
       </section>
       {modal === "create" && (
@@ -74,8 +77,7 @@ export function Landing({
           onClose={() => setModal(null)}
         >
           <p className="dialog-description">
-            Choose your name and room settings. This preview stays on your
-            device.
+            Choose your name and room settings. Anyone with your private invitation can join.
           </p>
           <form
             onSubmit={(e) => {
@@ -151,16 +153,16 @@ export function Landing({
           eyebrow="Private room invite"
           onClose={() => setModal(null)}
         >
-          <p className="dialog-description">
-            Joining online rooms will be available once the room service is
-            connected. You can explore a local room now.
-          </p>
+          <p className="dialog-description">Enter your name and the exact invitation link.</p>
+          <label className="field">Your display name<input value={name} maxLength={24} onChange={(event) => setName(event.target.value)} /></label>
+          <label className="field">Room link<input value={inviteLink} onChange={(event) => setInviteLink(event.target.value)} /></label>
           <div className="dialog-actions">
             <button
               className="primary-button"
-              onClick={() => setModal("create")}
+              disabled={!name.trim() || !inviteLink.includes('#invite=')}
+              onClick={() => onJoin(name.trim(), inviteLink.split('#invite=')[1] ?? '')}
             >
-              Explore a room →
+              Join room →
             </button>
             <button className="secondary-button" onClick={() => setModal(null)}>
               Close
