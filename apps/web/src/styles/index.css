@@ -256,9 +256,14 @@ i {
 }
 .room-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 14px minmax(220px, min(var(--sidebar-width, 280px), 50vw));
+  gap: 0;
 }
+.room-divider { cursor: col-resize; touch-action: none; user-select: none; display: grid; place-items: center; border-radius: 8px; }
+.room-divider span { width: 4px; height: 100px; max-height: 30%; border-radius: 4px; background: #587668; transition: background .15s; }
+.room-divider:hover span, .room-divider:focus-visible span { background: #d5ff65; }
+.extension-steps { list-style: decimal; padding-left: 24px; color: #afbbae; font-size: 19px; line-height: 1.65; }
+.extension-steps li + li { margin-top: 8px; }
 .player-panel {
   min-width: 0;
   background: #121b18;
@@ -531,6 +536,7 @@ i {
   opacity: 1;
 }
 @media (max-width: 800px) {
+  .room-divider { display: none; }
   .room-grid {
     grid-template-columns: 1fr;
   }

@@ -3,6 +3,9 @@ import { sources } from "../local-room";
 import type { LocalRoom, Source } from "../local-room";
 import { Dialog } from "./Dialog";
 import { MediaIcon } from "./MediaIcon";
+import { RoomDivider } from "./RoomDivider";
+import { ExtensionSetup } from "./ExtensionSetup";
+import type { CSSProperties } from "react";
 
 const sourceCopy: Record<
   Source,
@@ -43,6 +46,7 @@ export function WatchRoom({
   onLeave: () => void;
 }): React.JSX.Element {
   const [source, setSource] = useState<Source | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(280);
   const [modal, setModal] = useState<
     "invite" | "setup" | "settings" | "source" | null
   >(null);
@@ -94,7 +98,7 @@ export function WatchRoom({
           </button>
         </div>
       </header>
-      <div className="room-grid">
+      <div className="room-grid" style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}>
         <section className="player-panel">
           <nav className="source-tabs" aria-label="Video sources">
             {sources.map((item) => (
@@ -208,6 +212,7 @@ export function WatchRoom({
             </div>
           )}
         </section>
+        <RoomDivider width={sidebarWidth} onResize={setSidebarWidth} />
         <aside className="room-sidebar">
           <section className="participants">
             <div className="panel-heading">
@@ -278,7 +283,8 @@ export function WatchRoom({
         </aside>
       </div>
       {notice && <p role="status">{notice}</p>}
-      {modal && (
+      {modal === 'setup' && <ExtensionSetup gdrive={source === 'GDrive'} onClose={() => setModal(null)} />}
+      {modal && modal !== 'setup' && (
         <Dialog
           eyebrow={modal === "invite" ? "Private room invite" : "Kindred room"}
           title={

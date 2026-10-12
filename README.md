@@ -4,6 +4,9 @@ Kindred is a private watch-together app. Friends will be able to watch media, ch
 
 ## What works today
 
+- Drag the divider between the movie and participants to resize the room, including fullscreen. Arrow keys adjust it; double-click resets it.
+- Original extension setup guides and ZIP download are available. The bundled v0.8.0 extension targets the legacy site; React pairing is pending.
+
 - Original-style landing page, room setup, source navigation, settings, invite/leave dialogs, collapsible chat, and fullscreen layout.
 - Local room preview uses your display name; no fake participants are added.
 - TypeScript room service with typed room state and signed invite validation.
