@@ -2,6 +2,18 @@
 
 Kindred is a private watch-together app. Private rooms and shared text chat work locally. Video playback and calls are still being migrated.
 
+## Architecture diagram
+
+[Open the interactive project diagram](.archify/architecture-kindred-20261013-020518/kindred.html) to explore how the interface, room service and LiveKit connect.
+
+If your Markdown viewer does not open HTML, run this from the project folder on macOS:
+
+```sh
+open .archify/architecture-kindred-20261013-020518/kindred.html
+```
+
+No app server is needed. This generated diagram is currently local only—not included in a fresh clone. It describes the architecture as of 13 October 2026, not a live status dashboard.
+
 ## What works today
 
 - Legacy-style compact dialogs, scrollable source tabs, source URL/file fields, shared-control settings and chat clearing. Source submission remains disabled until playback is connected.
