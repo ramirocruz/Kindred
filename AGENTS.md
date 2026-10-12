@@ -25,6 +25,7 @@ See [README.md](README.md) for setup, commands, and current limitations.
 - The deployed legacy static app remains in `../couch-club-watch-party`; do not modify or deploy it unless the task explicitly targets it.
 - Do not switch production to this workspace before feature parity and two-device verification.
 - Preserve original markup, appearance, and interactions during migration. Change infrastructure incrementally; do not redesign or silently replace working features with placeholders.
+- Before migrating or correcting a UI feature, inspect its legacy markup, CSS, and handlers directly. Record deliberate differences; screenshots supplement source comparison rather than replace it.
 - Keep unrelated cleanup and refactors out of the task. Explicitly document incomplete parity.
 
 ## Context is mandatory

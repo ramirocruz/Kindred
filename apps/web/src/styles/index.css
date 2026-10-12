@@ -372,13 +372,25 @@ i {
   display: flex;
   gap: 6px;
   justify-content: center;
-  padding-top: 12px;
+  width: fit-content;
+  margin: 12px auto 0;
+  padding: 8px;
+  border: 1px solid #ffffff25;
+  border-radius: 16px;
+  background: #101815b8;
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
 }
 .reactions button {
-  background: #24372e;
+  background: #26342f99;
   border-radius: 12px;
   padding: 9px;
   font-size: 20px;
+  transition: transform .16s ease, background .16s ease;
+}
+.reactions button:hover {
+  transform: translateY(-2px);
+  background: #40574fcc;
 }
 .reaction-pop {
   position: absolute;
@@ -510,7 +522,9 @@ i {
   margin-top: auto;
   border: 1px solid #354b43;
   border-radius: 18px;
-  background: #19251f;
+  background: #192321b8;
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
 }
 .chat-heading {
   padding: 14px;
@@ -538,6 +552,7 @@ i {
 .chat-messages span { white-space: pre-wrap; }
 .chat-content input {
   width: 100%;
+  background: #10181599;
 }
 .interactive-option {
   display: flex;
