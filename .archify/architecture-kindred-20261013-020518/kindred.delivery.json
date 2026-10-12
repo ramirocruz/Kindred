@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0b7c70b6-c4fb-4b76-aa83-4eca4480d284",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/raman/Developer/Projects/Kindred/.archify/architecture-kindred-20261013-020518/candidate.json",
+  "output": "/Users/raman/Developer/Projects/Kindred/.archify/architecture-kindred-20261013-020518/kindred.html",
+  "specification": {
+    "sha256": "ed6e94194d0e0530230413cec68df6f01eea02ec57a6444dfde94726ab33dd16",
+    "bytes": 3262
+  },
+  "artifact": {
+    "sha256": "37132e01f1cd32a934142d4dbfadcd3466ee6d2225ead87cc0a24b4446501462",
+    "bytes": 751477
+  }
+}

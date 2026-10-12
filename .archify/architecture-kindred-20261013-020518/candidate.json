@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Kindred — high-level project flow",
+    "output": ".archify/architecture-kindred-20261013-020518/kindred.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": { "url": "https://github.com/ramirocruz/Kindred.git", "revision": "e4a4465b3c3fc6e0e186dc880a9185e6650f0bdf", "link_mode": "local-only" }
+  },
+  "components": [
+    { "id": "browser", "type": "frontend", "label": "Members' browsers", "sublabel": "React + Vite interface", "tag": "Create / invite / join", "pos": [40, 90], "size": [210, 90], "sources": [{ "path": "apps/web/src/features/room/services/session.ts", "line": 7, "end_line": 14 }, { "path": "apps/web/src/features/room/useRoomConnection.ts", "line": 21, "end_line": 61 }] },
+    { "id": "service", "type": "backend", "label": "Room service", "sublabel": "Fastify + Socket.IO + Zod", "tag": "Signed tickets required", "pos": [450, 90], "size": [220, 90], "sources": [{ "path": "apps/room-service/src/main.ts", "line": 16, "end_line": 59 }, { "path": "apps/room-service/src/transport/socket-server.ts", "line": 71, "end_line": 113 }] },
+    { "id": "memory", "type": "database", "label": "Temporary room state", "sublabel": "Invites, members, chat", "tag": "In-memory · no database", "pos": [450, 350], "size": [220, 90], "sources": [{ "path": "apps/room-service/src/rooms/invitations.ts", "line": 6, "end_line": 24 }, { "path": "apps/room-service/src/transport/socket-server.ts", "line": 99, "end_line": 139 }, { "path": "apps/room-service/src/rooms/room-registry.ts", "line": 12, "end_line": 39 }] },
+    { "id": "media", "type": "cloud", "label": "LiveKit media server", "sublabel": "Camera + microphone calls", "tag": "Needs configuration", "pos": [40, 350], "size": [210, 90], "sources": [{ "path": "apps/web/src/features/room/components/MediaCall.tsx", "line": 16, "end_line": 68 }, { "path": "apps/room-service/src/main.ts", "line": 41, "end_line": 59 }, { "path": "apps/room-service/src/livekit-token.ts", "line": 5, "end_line": 20 }] }
+  ],
+  "connections": [
+    { "id": "coordination", "from": "browser", "to": "service", "label": "HTTP + Socket.IO", "variant": "emphasis" },
+    { "id": "state", "from": "service", "to": "memory", "label": "Read / update" },
+    { "id": "calls", "from": "browser", "to": "media", "label": "Opt-in + media token", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Working: private rooms + chat", "items": ["Create a room or exchange an invite for a signed ticket.", "Socket.IO broadcasts members and chat back to connected browsers.", "Disconnect removes membership; empty rooms lose chat history."] },
+    { "dot": "amber", "title": "Optional: media path", "items": ["Join call requests a room-bound, 10-minute token from the service.", "The browser then connects directly to configured LiveKit.", "Camera and mic start off; live delivery remains unverified."] },
+    { "dot": "slate", "title": "Current boundaries", "items": ["Invite possession grants access; links expire after 24 hours or restart.", "Server memory is not durable storage; chat retains at most 100 messages.", "YouTube, web/local video and extension pairing remain migration work."] }
+  ]
+}
