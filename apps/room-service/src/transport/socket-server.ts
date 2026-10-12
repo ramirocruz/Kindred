@@ -1,4 +1,5 @@
 import type { Server as HttpServer } from 'node:http';
+import { randomUUID } from 'node:crypto';
 
 import { Server } from 'socket.io';
 import { z } from 'zod';
@@ -21,6 +22,7 @@ const playbackPayloadSchema = z.discriminatedUnion('type', [
 interface ConnectedMember {
   identity: string;
   roomId: string;
+  expiresAt: number;
 }
 
 interface RoomLogger {
@@ -46,7 +48,9 @@ function leaveRoom(
   }
 
   members.delete(socketId);
-  registry.leave(member.roomId, member.identity);
+  if (![...members.values()].some((other) => other.roomId === member.roomId && other.identity === member.identity)) {
+    registry.leave(member.roomId, member.identity);
+  }
   emitRoomState(io, member.roomId, registry);
   return member.roomId;
 }
@@ -60,9 +64,12 @@ export function attachRoomSocket(
 ): Server {
   const io = new Server(server, { cors: { origin } });
   const members = new Map<string, ConnectedMember>();
+  const histories = new Map<string, { id: string; author: string; text: string }[]>();
 
   io.on('connection', (socket) => {
+    let lastMessageAt = 0;
     socket.on('room:join', (payload: unknown, acknowledge: (response: unknown) => void) => {
+      if (typeof acknowledge !== 'function') return;
       const parsed = joinPayloadSchema.safeParse(payload);
       if (!parsed.success) {
         acknowledge({ error: 'Invalid room join request.' });
@@ -81,14 +88,33 @@ export function attachRoomSocket(
         socket.leave(previousRoomId);
       }
       socket.join(roomId);
-      members.set(socket.id, { identity: claims.identity, roomId });
+      members.set(socket.id, { identity: claims.identity, roomId, expiresAt: claims.expiresAt });
       const room = registry.join(roomId, { displayName: claims.displayName, id: claims.identity }, Date.now());
       logger.info({ roomId, socketId: socket.id }, 'Room member joined');
       io.to(roomId).emit('room:state', serializeRoomState(room));
       acknowledge({ room: serializeRoomState(room) });
+      socket.emit('chat:history', histories.get(roomId) ?? []);
+    });
+
+    socket.on('chat:send', (payload: unknown, acknowledge: (response: unknown) => void) => {
+      if (typeof acknowledge !== 'function') return;
+      const member = members.get(socket.id);
+      const parsed = z.object({ text: z.string().trim().min(1).max(2000) }).safeParse(payload);
+      const author = member && registry.get(member.roomId)?.members.get(member.identity);
+      if (!member || !author || !parsed.success || member.expiresAt <= Date.now()) {
+        acknowledge({ error: 'Message rejected. Check your connection and invitation.' }); return;
+      }
+      if (Date.now() - lastMessageAt < 300) { acknowledge({ error: 'Please wait before sending another message.' }); return; }
+      lastMessageAt = Date.now();
+      const message = { id: randomUUID(), author: author.displayName, text: parsed.data.text };
+      const history = [...(histories.get(member.roomId) ?? []), message].slice(-100);
+      histories.set(member.roomId, history);
+      io.to(member.roomId).emit('chat:message', message);
+      acknowledge({ ok: true });
     });
 
     socket.on('room:playback', (payload: unknown, acknowledge: (response: unknown) => void) => {
+      if (typeof acknowledge !== 'function') return;
       const member = members.get(socket.id);
       const parsed = playbackPayloadSchema.safeParse(payload);
       if (!member || !parsed.success) {
@@ -109,6 +135,7 @@ export function attachRoomSocket(
     socket.on('disconnect', () => {
       const roomId = leaveRoom(io, members, registry, socket.id);
       if (roomId) {
+        if (!registry.get(roomId)) histories.delete(roomId);
         logger.info({ roomId, socketId: socket.id }, 'Room member disconnected');
       }
     });
