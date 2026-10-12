@@ -35,6 +35,8 @@ LiveKit call UI is integrated but requires your media server configuration; live
 
 ## Camera and microphone setup
 
+**Architecture transition:** PeerJS/WebRTC with self-hosted signaling and STUN/TURN is now the approved target. The LiveKit implementation below still exists until that replacement is tested. Chat encryption primitives have tests, but chat currently remains readable by the room service; end-to-end encryption is not enabled yet.
+
 Set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` in the room service's ignored `.env.local`, then restart the service. Use a LiveKit Cloud project or your own LiveKit server. Never place the API secret in the web app.
 
 In a room, select **Join call**. Camera and microphone start off; hover over your card to enable them. Your own preview is mirrored; outgoing video is unchanged. If the browser blocks sound, select **Enable call audio**. **Leave call** disconnects media without leaving chat.

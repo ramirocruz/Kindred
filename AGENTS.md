@@ -2,7 +2,7 @@
 
 ## Overview
 
-Kindred is a private watch-together app migrating to React + Vite, a TypeScript room service, and LiveKit media. Styling uses Tailwind CSS; room coordination uses Socket.IO.
+Kindred is a private watch-together app using React + Vite and a TypeScript room service. The approved media target is now PeerJS/WebRTC; existing LiveKit integration is transitional, not yet replaced. Styling uses Tailwind CSS; room coordination uses Socket.IO.
 
 See [README.md](README.md) for setup, commands, and current limitations.
 
@@ -21,7 +21,7 @@ See [README.md](README.md) for setup, commands, and current limitations.
 
 ## Scope
 
-- Build Kindred here: React/Vite web client, TypeScript room service, and LiveKit media.
+- Build Kindred here: React/Vite web client, TypeScript room service, and PeerJS/WebRTC media.
 - The deployed legacy static app remains in `../couch-club-watch-party`; do not modify or deploy it unless the task explicitly targets it.
 - Do not switch production to this workspace before feature parity and two-device verification.
 - Preserve original markup, appearance, and interactions during migration. Change infrastructure incrementally; do not redesign or silently replace working features with placeholders.
@@ -46,10 +46,20 @@ Before every task, read `Context/README.md`, `Context/index.md`, and the documen
 - Interface: React + Vite + TypeScript.
 - Styling: Tailwind CSS.
 - Room coordination: TypeScript + Socket.IO service.
-- Camera, microphone, and screen media: LiveKit.
+- Camera, microphone, and screen media: PeerJS/WebRTC with explicitly configured self-hosted signaling and ICE servers. Never fall back to PeerJS public defaults.
 - Personal-file transport: WebTorrent, isolated from room coordination.
 - Keep credentials in environment variables; never commit them.
 - Require signed room tickets before issuing media tokens or joining room coordination.
+
+## Privacy and call quality
+
+- Use browser WebRTC encryption and HTTPS/WSS outside loopback development. Do not invent cryptographic algorithms or claim leak-proof security.
+- Authenticate signaling against room membership; use short-lived server-issued TURN credentials. A PeerJS identifier alone is not authorization.
+- Encrypt chat on clients before transport. Key distribution, membership changes, replay rejection and server-side plaintext rejection are release gates; a tested encryption helper alone is not E2EE.
+- Keep chat keys out of server requests, logs and persistent browser storage. Never silently fall back to plaintext on encryption failure.
+- No recording, analytics or sensitive payload logging by default. Document metadata visibility, endpoint compromise, participant recording and P2P IP exposure.
+- Enable microphone echo cancellation, noise suppression and gain control where supported. Render each incoming audio track once; stop tracks and close connections on leave.
+- Keep movie/screen audio separate from speech processing. Optimize measured latency and quality with adaptive bitrate, not maximum compression or forced unsupported codecs.
 
 ## Code Standards
 
