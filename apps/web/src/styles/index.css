@@ -126,13 +126,13 @@ h3 {
   margin-top: 20px;
 }
 .kindred-dialog {
-  width: min(720px, calc(100% - 32px));
+  width: min(570px, calc(100% - 34px));
   margin: auto;
   max-height: 90dvh;
   overflow-y: auto;
   border: 1px solid #536e60;
-  border-radius: 28px;
-  padding: clamp(24px, 4vw, 40px);
+  border-radius: 22px;
+  padding: 26px;
   background: #17221e;
   color: #f4f5ee;
   box-shadow: 0 25px 90px #0008;
@@ -142,7 +142,7 @@ h3 {
   backdrop-filter: blur(6px);
 }
 .kindred-dialog h2 {
-  font-size: clamp(28px, 3.5vw, 40px);
+  font-size: 30px;
   letter-spacing: -0.05em;
   line-height: 1.15;
   font-weight: 850;
@@ -150,7 +150,7 @@ h3 {
 }
 .dialog-description {
   color: #afbbae;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.5;
   margin-bottom: 28px;
 }
@@ -172,17 +172,17 @@ h3 {
   color: #aeb9ad;
 }
 .switch {
-  width: 54px;
-  height: 30px;
+  width: 44px;
+  height: 25px;
   flex-shrink: 0;
-  padding: 4px;
+  padding: 3px;
   border-radius: 30px;
   background: #526357;
 }
 .switch span {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   background: white;
   border-radius: 50%;
   transition: transform 0.15s;
@@ -191,7 +191,7 @@ h3 {
   background: #90ae2d;
 }
 .switch[aria-checked="true"] span {
-  transform: translateX(24px);
+  transform: translateX(19px);
 }
 .dialog-actions {
   justify-content: flex-end;
@@ -206,7 +206,7 @@ h3 {
   white-space: nowrap;
 }
 .watch-room {
-  padding: 22px;
+  padding: 16px 18px 54px;
   min-height: 100dvh;
 }
 .room-header {
@@ -218,7 +218,7 @@ h3 {
   flex-wrap: wrap;
 }
 .brand {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 900;
   letter-spacing: -0.05em;
   display: flex;
@@ -226,12 +226,16 @@ h3 {
   gap: 12px;
 }
 .brand span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
   background: #d5ff65;
   color: #17221e;
   font-size: 20px;
   border-radius: 14px 14px 14px 4px;
   transform: rotate(-7deg);
-  padding: 9px 14px;
+  padding: 0;
 }
 .room-pill {
   display: flex;
@@ -262,7 +266,7 @@ i {
 .room-divider { cursor: col-resize; touch-action: none; user-select: none; display: grid; place-items: center; border-radius: 8px; }
 .room-divider span { width: 4px; height: 100px; max-height: 30%; border-radius: 4px; background: #587668; transition: background .15s; }
 .room-divider:hover span, .room-divider:focus-visible span { background: #d5ff65; }
-.extension-steps { list-style: decimal; padding-left: 24px; color: #afbbae; font-size: 19px; line-height: 1.65; }
+.extension-steps { list-style: decimal; padding-left: 24px; color: #afbbae; font-size: 16px; line-height: 1.65; }
 .extension-steps li + li { margin-top: 8px; }
 .player-panel {
   min-width: 0;
@@ -274,12 +278,14 @@ i {
 }
 .source-tabs {
   display: flex;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: none;
   gap: 8px;
   margin-bottom: 14px;
 }
+.source-tabs button { flex: none; white-space: nowrap; min-height: 36px; font-size: 13px; border-radius: 10px; }
 .welcome-screen {
-  min-height: 470px;
+  min-height: 380px;
   height: calc(100dvh - 235px);
   border-radius: 18px;
   background:
@@ -312,7 +318,8 @@ i {
   text-align: left;
   padding: 12px;
   margin-top: 22px;
-  background: #0e1713;
+  background: #0d1513a6;
+  backdrop-filter: blur(10px);
   border: 1px solid #354337;
   border-radius: 20px;
 }
@@ -324,8 +331,9 @@ i {
 .artwork {
   display: grid;
   place-items: center;
-  width: 70px;
-  height: 90px;
+  width: 62px;
+  height: 72px;
+  flex-shrink: 0;
   border-radius: 12px;
   background: linear-gradient(140deg, #efc086, #d78266, #62394a);
   color: #ffedac;
@@ -340,7 +348,8 @@ i {
   height: 44px;
   border-radius: 50%;
   border: 1px solid #446052;
-  background: #20312a;
+  background: linear-gradient(145deg, #273a34, #17241f);
+  box-shadow: inset 0 1px 0 #ffffff14, 0 6px 16px #02080636;
   font-size: 22px;
   flex-shrink: 0;
 }
@@ -349,6 +358,8 @@ i {
   line-height: 1;
 }
 .round.lime {
+  width: 48px;
+  height: 48px;
   background: #d5ff65;
   color: #162116;
   border: none;
@@ -421,6 +432,7 @@ i {
   top: 12px;
   height: calc(100dvh - 110px);
   align-self: start;
+  padding-bottom: 45px;
 }
 .participants {
   flex: 1;
@@ -452,6 +464,8 @@ i {
 }
 .call-card.enlarged {
   width: 100%;
+  outline: 2px solid #d5ff65;
+  outline-offset: -2px;
 }
 .member-label {
   position: absolute;
@@ -485,6 +499,10 @@ i {
   margin-top: -6px;
 }
 .card-zoom {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -518,10 +536,15 @@ i {
   color: #a2afa1;
 }
 .chat {
+  position: fixed;
+  right: 18px;
+  bottom: 0;
+  z-index: 20;
+  width: clamp(280px, 24vw, 370px);
   flex: none;
   margin-top: auto;
   border: 1px solid #354b43;
-  border-radius: 18px;
+  border-radius: 15px 15px 0 0;
   background: #192321b8;
   -webkit-backdrop-filter: blur(15px);
   backdrop-filter: blur(15px);
@@ -544,6 +567,8 @@ i {
   font-size: 13px;
 }
 .chat-compose { display: flex; gap: 8px; }
+.chat-meta { display: flex; gap: 8px; align-items: center; }
+.chat-meta button { font-size: 12px; }
 .chat-compose input { min-width: 0; flex: 1; }
 .chat-messages { min-height: 0; overflow-y: auto; overflow-wrap: anywhere; }
 .chat-content .preview-note { margin: 0; font-size: 11px; }
@@ -564,18 +589,30 @@ i {
   color: #ffa4a4 !important;
 }
 .watch-room:fullscreen {
-  background: #07110c;
-  overflow: auto;
+  background: #000;
+  overflow: hidden;
+  padding: 6px;
 }
+.watch-room:fullscreen .room-grid { height: calc(100dvh - 12px); }
+.watch-room:fullscreen .player-panel { min-height: 0; padding: 0; border: 0; border-radius: 0; background: #000; }
 .watch-room:fullscreen .room-sidebar { height: calc(100dvh - 24px); }
 .watch-room:fullscreen .room-header,
 .watch-room:fullscreen .source-tabs {
   display: none;
 }
 .watch-room:fullscreen .welcome-screen {
-  height: calc(100dvh - 155px);
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
 }
 .watch-room:fullscreen .player-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 12;
+  padding: 35px 15px 12px;
+  background: linear-gradient(transparent, #07100ef2 35%);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -619,6 +656,13 @@ i {
     padding: 12px;
   }
 }
+
+.watch-room:fullscreen .reactions { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); }
+.watch-room:fullscreen .chat { right: 6px; width: clamp(180px, 19vw, 300px); }
+@media (hover: none), (pointer: coarse) {
+  .call-controls, .watch-room:fullscreen .player-controls { opacity: 1; }
+}
+.secondary-button { background: #192321; }
 
 @theme {
   --color-kindred-lime: #d5ff65;

@@ -4,6 +4,9 @@ Kindred is a private watch-together app. Friends will be able to watch media, ch
 
 ## What works today
 
+- Legacy-style compact dialogs, scrollable source tabs, source URL/file fields, shared-control settings and chat clearing. Source submission remains disabled until playback is connected.
+- Fullscreen uses a full-height player with bottom-overlay controls, preserving the participant sidebar.
+
 - Compact bottom-docked Messages panel with scrollable history. Reactions float and fade automatically, with reduced-motion support.
 
 - Drag the divider between the movie and participants to resize the room, including fullscreen. Arrow keys adjust it; double-click resets it.

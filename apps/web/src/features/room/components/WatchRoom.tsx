@@ -6,6 +6,7 @@ import { MediaIcon } from "./MediaIcon";
 import { RoomDivider } from "./RoomDivider";
 import { ExtensionSetup } from "./ExtensionSetup";
 import { RoomChat } from "./RoomChat";
+import { SourceSetup } from "./SourceSetup";
 import type { CSSProperties } from "react";
 
 const sourceCopy: Record<
@@ -267,21 +268,25 @@ export function WatchRoom({
       </div>
       {notice && <p role="status">{notice}</p>}
       {modal === 'setup' && <ExtensionSetup gdrive={source === 'GDrive'} onClose={() => setModal(null)} />}
-      {modal && modal !== 'setup' && (
+      {modal === 'source' && source && <SourceSetup source={source} onClose={() => setModal(null)} />}
+      {modal && modal !== 'setup' && modal !== 'source' && (
         <Dialog
           eyebrow={modal === "invite" ? "Private room invite" : "Kindred room"}
           title={
             modal === "invite"
               ? "Bring your people together."
               : modal === "settings"
-                ? "Your room, your rules."
-                : modal === "source"
-                  ? copy?.action || "Choose a video"
-                  : "Shared tab control"
+                ? "Make it yours."
+                : "Shared tab control"
           }
           onClose={() => setModal(null)}
         >
           {modal === "settings" ? (
+            <>
+            <div className="setting">
+              <div><h3>Shared room controls</h3><p>All connected members can play, pause, seek, and change the source.</p></div>
+              <span className="badge">Everyone</span>
+            </div>
             <div className="setting">
               <div>
                 <h3>Instant reactions</h3>
@@ -297,13 +302,13 @@ export function WatchRoom({
                 <span />
               </button>
             </div>
+            <p className="preview-note">Settings apply to this local preview. Guest permissions require online rooms.</p>
+            </>
           ) : (
             <p className="dialog-description">
               {modal === "invite"
                 ? "This room currently runs on your device. Shareable private links will be enabled when online rooms are connected."
-                : modal === "source"
-                  ? "This source is being migrated. Playback is not connected in this interface yet."
-                  : "GDrive uses playback controls. Screen share offers viewing or interactive control. Extension pairing is being migrated; the new room cannot link a tab yet."}
+                : "GDrive uses playback controls. Screen share offers viewing or interactive control. Extension pairing is being migrated; the new room cannot link a tab yet."}
             </p>
           )}
           <div className="dialog-actions">

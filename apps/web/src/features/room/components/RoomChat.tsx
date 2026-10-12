@@ -14,7 +14,9 @@ export function RoomChat({ displayName }: { displayName: string }): React.JSX.El
       </button>
       {open && (
         <div className="chat-content">
-          <p className="preview-note">Local preview only — messages are not sent to other members.</p>
+          <div className="chat-meta"><p className="preview-note">Local preview only — messages are not sent to other members.</p>
+            {messages.length > 0 && <button onClick={() => setMessages([])} aria-label="Clear messages">Clear</button>}
+          </div>
           <div className="chat-messages" role="log" aria-label="Messages" aria-live="polite">
             {messages.length === 0 && <p>No messages yet.</p>}
             {messages.map((message) => (
