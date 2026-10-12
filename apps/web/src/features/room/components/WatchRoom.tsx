@@ -54,7 +54,8 @@ export function WatchRoom({
   const [reactions, setReactions] = useState(room.reactions);
   const [interactive, setInteractive] = useState(false);
   const [zoom, setZoom] = useState(false);
-  const [reaction, setReaction] = useState("");
+  const [reaction, setReaction] = useState<{ emoji: string; id: number } | null>(null);
+  const reactionSequence = useRef(0);
   const [notice, setNotice] = useState("");
   const stage = useRef<HTMLDivElement>(null);
   const copy = source ? sourceCopy[source] : null;
@@ -156,14 +157,16 @@ export function WatchRoom({
                 <span className="round lime">▶</span>
               </div>
             )}
-            {reaction && (
-              <button
+            {reactions && reaction && (
+              <span
+                key={reaction.id}
                 className="reaction-pop"
-                aria-label="Dismiss reaction"
-                onClick={() => setReaction("")}
+                role="status"
+                aria-label={`Reaction ${reaction.emoji}`}
+                onAnimationEnd={() => setReaction((current) => current?.id === reaction.id ? null : current)}
               >
-                {reaction}
-              </button>
+                {reaction.emoji}
+              </span>
             )}
           </div>
           <div className="player-controls">
@@ -204,7 +207,7 @@ export function WatchRoom({
                 <button
                   key={emoji}
                   aria-label={`React ${emoji}`}
-                  onClick={() => setReaction(emoji)}
+                  onClick={() => setReaction({ emoji, id: ++reactionSequence.current })}
                 >
                   {emoji}
                 </button>

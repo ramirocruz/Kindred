@@ -4,6 +4,8 @@ Kindred is a private watch-together app. Friends will be able to watch media, ch
 
 ## What works today
 
+- Compact bottom-docked Messages panel with scrollable history. Reactions float and fade automatically, with reduced-motion support.
+
 - Drag the divider between the movie and participants to resize the room, including fullscreen. Arrow keys adjust it; double-click resets it.
 - Original extension setup guides and ZIP download are available. The bundled v0.8.0 extension targets the legacy site; React pairing is pending.
 
