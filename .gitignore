@@ -8,3 +8,7 @@ apps/*/build/
 .env
 .env.*
 !.env.example
+.archify/**/*.html
+.archify/**/*-check.json
+.archify/**/*.delivery*.json
+.archify/**/*.finalize*.json

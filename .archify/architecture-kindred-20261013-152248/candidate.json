@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Kindred — browser-owned watch parties",
+    "output": ".archify/architecture-kindred-20261013-152248/kindred.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "git@github.com:ramirocruz/Kindred.git", "revision": "b3e9e8b6e5009a20bd2ad173c77f456af423f022", "link_mode": "local-only" }
+  },
+  "components": [
+    { "id": "drive", "type": "external", "label": "Google Drive tab", "sublabel": "Actual video playback", "pos": [40, 70], "size": [190, 80],
+      "sources": [{ "path": "extensions/gdrive/media.js", "line": 21, "end_line": 49 }, { "path": "extensions/gdrive/background.js", "line": 4, "end_line": 10 }] },
+    { "id": "extension", "type": "security", "label": "GDrive extension", "sublabel": "Pinned tab + document", "tag": "Explicit share · no debugger", "pos": [370, 70], "size": [240, 80],
+      "sources": [{ "path": "extensions/gdrive/background.js", "line": 35, "end_line": 66 }, { "path": "extensions/gdrive/manifest.json", "line": 1, "end_line": 12 }] },
+    { "id": "presenter", "type": "frontend", "label": "Presenter browser", "sublabel": "React / Vite + PeerJS", "tag": "Capture + room logic", "pos": [370, 330], "size": [240, 80],
+      "sources": [{ "path": "apps/web/src/features/room/useRoomConnection.ts", "line": 46, "end_line": 85 }, { "path": "apps/web/src/features/room/services/gdrive-bridge.ts", "line": 75, "end_line": 119 }, { "path": "apps/web/src/features/room/services/peer-screen.ts", "line": 16, "end_line": 49 }] },
+    { "id": "members", "type": "frontend", "label": "Member browsers", "sublabel": "Watch / chat / camera calls", "tag": "Everyone can play + seek", "pos": [950, 330], "size": [240, 80],
+      "sources": [{ "path": "apps/web/src/features/room/services/browser-room.ts", "line": 207, "end_line": 229 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 278, "end_line": 335 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 346, "end_line": 383 }] },
+    { "id": "connection-services", "type": "cloud", "label": "Public PeerJS / ICE", "sublabel": "Signaling + STUN / TURN", "tag": "Optional self-host override", "pos": [950, 70], "size": [240, 80],
+      "sources": [{ "path": "apps/web/src/features/room/services/peer-config.ts", "line": 9, "end_line": 27 }, { "path": "README.md", "line": 19, "end_line": 25 }] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Presenter-local capability", "wraps": ["extension", "presenter"], "pad": 22 }
+  ],
+  "connections": [
+    { "id": "source-control", "from": "extension", "to": "drive", "label": "Play / seek", "variant": "security" },
+    { "id": "capture-bridge", "from": "extension", "to": "presenter", "label": "Stream ID / bridge", "variant": "security" },
+    { "id": "capture-stream", "from": "drive", "to": "presenter", "label": "Captured A/V", "fromSide": "bottom", "toSide": "left" },
+    { "id": "presenter-signaling", "from": "presenter", "to": "connection-services", "label": "Signaling / ICE", "variant": "dashed" },
+    { "id": "member-signaling", "from": "members", "to": "connection-services", "label": "Signaling / ICE", "variant": "dashed" },
+    { "id": "encrypted-media", "from": "presenter", "to": "members", "label": "WebRTC media / data", "variant": "emphasis" },
+    { "id": "guest-controls", "from": "members", "to": "presenter", "label": "Encrypted controls / chat", "variant": "security", "fromSide": "bottom", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Browser authority", "items": ["No application room service or database", "Creator coordinates first; eldest reachable member succeeds after claiming the stable peer address", "Former host returns as a regular member; coordinator need not be the presenter", "Membership and latest 100 encrypted messages live in member memory"] },
+    { "dot": "emerald", "title": "Two separate media paths", "items": ["Drive tab capture streams to guests without joining a camera call", "Guests send playback requests to the presenter; source acknowledgements confirm results", "Camera/mic use separate PeerJS calls; movie audio plays once after unmuting Kindred", "Only the presenter can stop/unlink; departure removes the presentation"] },
+    { "dot": "amber", "title": "Privacy and verification limits", "items": ["Public signaling / STUN / TURN defaults are temporary; hosting/privacy decision is TODO", "WebRTC encrypts transport; chat and control frames additionally use invitation-key AES-GCM", "Media may be direct or relayed by TURN; metadata and peer IP visibility remain", "GDrive integration is implemented/tested with fixtures, not yet verified on authenticated Drive or two physical devices", "YouTube, personal files and interactive screen-sharing migration remain pending"] }
+  ]
+}

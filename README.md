@@ -106,10 +106,11 @@ The former room-service source and LiveKit dependencies are removed; previous ve
 - `scripts/peer-server.mjs`: local signaling launcher.
 - [AGENTS.md](AGENTS.md): development rules.
 - `Context/index.md`: ignored local project notes; unavailable in fresh clones.
-- [Architecture diagram](.archify/architecture-kindred-20261013-020518/kindred.html): interactive HTML snapshot of the older service architecture, awaiting update.
+- [High-level design](docs/architecture.md): current browser authority, PeerJS and GDrive paths.
+- [Interactive architecture diagram](.archify/architecture-kindred-20261013-152248/kindred.html): generated local Archify view of the current design; HTML is not included in fresh clones. Its authored candidate is versioned alongside it.
 
 To open the diagram on macOS:
 
 ```sh
-open .archify/architecture-kindred-20261013-020518/kindred.html
+open .archify/architecture-kindred-20261013-152248/kindred.html
 ```
