@@ -1,6 +1,10 @@
 # GDrive latency diagnosis
 
-Date 2026-10-13; inspected runtime ff2a75c. Diagnosis only: no playback/media implementation changed. User reports slower guest stream and delayed controls versus legacy; duration/devices/path not yet supplied.
+Date 2026-10-13; inspected runtime ff2a75c. Diagnosis only: no playback/media implementation changed. User confirms both browsers Chrome, GitHub Pages, guest video stuttering rather than merely delayed. Exact hardware, network, command latency and chat volume remain unknown.
+
+## Member recording reviewed
+
+Offline decoding of supplied 10.2-second phone recording succeeded. Container is H.264, 576×1024, ~29.9fps; these describe the recording, NOT delivered WebRTC FPS. Inspected sequential samples across the clip and 0.2-second samples of its last four seconds: movie poses persist then change abruptly, while camera movement continues and room chrome stays present. No visible whole-page reload in inspected samples. Anime intentionally holds poses, so missing/intermediate frames and freeze duration cannot be attributed conclusively without source-side comparison. This supports the reported uneven-motion symptom, not a network/CPU/codec diagnosis. Audio quality not assessed; no playback clicks evident in inspected samples to time control response. No raw recording, screenshots, invite fragments or personal desktop details committed.
 
 ## Confirmed implementation differences
 

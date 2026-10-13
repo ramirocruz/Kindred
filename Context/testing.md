@@ -21,7 +21,7 @@ Updated 2026-10-13. Evidence applies to listed revisions, not every later change
 
 Real two-device camera/mic and Drive audio/video; audible echo/noise/latency measurement; TURN-only/difficult networks; autoplay/device-denial/reconnect; host loss with independent presenter; background tabs/long sessions; dependency/security review and membership revocation.
 
-Latency diagnosis: native encryption synthetic snapshot-size benchmark and actual attach/receive replay with transport/decryption stubs confirm volume growth and queued pause/ping behind seek. Not live network/video measurements. Detailed cases and limits: [performance](performance.md). No runtime fix implemented.
+Latency diagnosis: native encryption synthetic snapshot-size benchmark and actual attach/receive replay with transport/decryption stubs confirm volume growth and queued pause/ping behind seek. Supplied member-side phone recording reviewed offline; uneven held/abruptly changing movie poses, no visible page reload in samples. Recording FPS is not stream FPS and source animation may hold poses. No live WebRTC/network measurements or audio-quality assessment. Detailed cases and limits: [performance](performance.md). No runtime fix implemented.
 
 ## Context compaction
 
