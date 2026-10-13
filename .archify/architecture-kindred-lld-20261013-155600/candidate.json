@@ -1,0 +1,43 @@
+{
+  "schema_version": 1, "diagram_type": "architecture",
+  "meta": {
+    "title": "Kindred LLD — active runtime modules",
+    "output": ".archify/architecture-kindred-lld-20261013-155600/lld.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "git@github.com:ramirocruz/Kindred.git", "revision": "690b64582e7b717ea1da101147a6cd62a8531d2b", "link_mode": "local-only" }
+  },
+  "components": [
+    { "id": "ui", "type": "frontend", "label": "App + WatchRoom", "sublabel": "Landing / controls / dialogs", "pos": [480, 60], "size": [240, 80], "sources": [{ "path": "apps/web/src/App.tsx", "line": 7, "end_line": 28 }, { "path": "apps/web/src/features/room/components/WatchRoom.tsx", "line": 48, "end_line": 85 }] },
+    { "id": "session", "type": "security", "label": "session.ts", "sublabel": "Invite + identity + chat key", "pos": [40, 60], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/session.ts", "line": 18, "end_line": 44 }] },
+    { "id": "hook", "type": "frontend", "label": "useRoomConnection", "sublabel": "React observer + lifecycle", "pos": [480, 280], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/useRoomConnection.ts", "line": 46, "end_line": 101 }] },
+    { "id": "chat", "type": "security", "label": "Chat crypto + inbox", "sublabel": "AES-GCM + ordered decryption", "pos": [930, 280], "size": [250, 80], "sources": [{ "path": "apps/web/src/features/room/services/chat-crypto.ts", "line": 39, "end_line": 76 }, { "path": "apps/web/src/features/room/services/encrypted-chat-inbox.ts", "line": 21, "end_line": 62 }] },
+    { "id": "controller", "type": "backend", "label": "BrowserRoom", "sublabel": "Browser-side PeerJS controller", "tag": "Admission / snapshots / succession", "pos": [480, 530], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/browser-room.ts", "line": 105, "end_line": 193 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 258, "end_line": 335 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 346, "end_line": 431 }] },
+    { "id": "state", "type": "backend", "label": "browser-room-state", "sublabel": "Zod schemas + pure reducers", "tag": "Memory only · no database", "pos": [40, 530], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/browser-room-state.ts", "line": 5, "end_line": 52 }, { "path": "apps/web/src/features/room/services/gdrive-protocol.ts", "line": 1, "end_line": 21 }] },
+    { "id": "frames", "type": "security", "label": "room-frame.ts", "sublabel": "Endpoint-bound encrypted frames", "pos": [930, 530], "size": [250, 80], "sources": [{ "path": "apps/web/src/features/room/services/room-frame.ts", "line": 19, "end_line": 39 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 118, "end_line": 152 }] },
+    { "id": "camera", "type": "frontend", "label": "PeerMedia + MediaCall", "sublabel": "Separate camera / mic calls", "tag": "One rendered inbound stream", "pos": [40, 810], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/peer-media.ts", "line": 6, "end_line": 63 }, { "path": "apps/web/src/features/room/components/MediaCall.tsx", "line": 29, "end_line": 85 }, { "path": "apps/web/src/features/room/services/call-lock.ts", "line": 1, "end_line": 9 }] },
+    { "id": "screen", "type": "frontend", "label": "PeerScreen + player", "sublabel": "Captured stream / speaker UI", "pos": [480, 810], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/peer-screen.ts", "line": 16, "end_line": 62 }, { "path": "apps/web/src/features/room/components/GDrivePlayer.tsx", "line": 5, "end_line": 60 }] },
+    { "id": "bridge", "type": "security", "label": "GDriveBridge", "sublabel": "Local token + capture + polling", "tag": "Room peers get epoch only", "pos": [930, 810], "size": [250, 80], "sources": [{ "path": "apps/web/src/features/room/services/gdrive-bridge.ts", "line": 27, "end_line": 73 }, { "path": "apps/web/src/features/room/services/gdrive-bridge.ts", "line": 75, "end_line": 135 }, { "path": "apps/web/src/features/room/useRoomConnection.ts", "line": 52, "end_line": 73 }] },
+    { "id": "extension", "type": "security", "label": "Extension bridge + worker", "sublabel": "Room document + source pinning", "pos": [930, 1080], "size": [250, 80], "sources": [{ "path": "extensions/gdrive/kindred-bridge.js", "line": 1, "end_line": 25 }, { "path": "extensions/gdrive/background.js", "line": 35, "end_line": 93 }] },
+    { "id": "video", "type": "external", "label": "Drive HTML video", "sublabel": "mediaOperation in pinned frame", "pos": [480, 1080], "size": [240, 80], "sources": [{ "path": "extensions/gdrive/media.js", "line": 3, "end_line": 49 }] }
+  ],
+  "connections": [
+    { "id": "create-invite", "from": "ui", "to": "session", "label": "Create / parse invite" },
+    { "id": "mount-connection", "from": "ui", "to": "hook", "label": "RoomSession" },
+    { "id": "chat-cryptography", "from": "hook", "to": "chat", "label": "Encrypt / decrypt", "variant": "security" },
+    { "id": "compose-controller", "from": "hook", "to": "controller", "label": "PeerJS lifecycle" },
+    { "id": "validated-state", "from": "controller", "to": "state", "label": "Validate / commit" },
+    { "id": "seal-open", "from": "controller", "to": "frames", "label": "Seal / open frames", "variant": "security" },
+    { "id": "camera-calls", "from": "controller", "to": "camera", "label": "Media calls" },
+    { "id": "captured-calls", "from": "controller", "to": "screen", "label": "Screen calls" },
+    { "id": "presenter-command", "from": "controller", "to": "bridge", "label": "Presenter callback", "variant": "security" },
+    { "id": "share-stream", "from": "bridge", "to": "screen", "label": "Captured stream" },
+    { "id": "extension-messages", "from": "bridge", "to": "extension", "label": "postMessage bridge", "variant": "security" },
+    { "id": "source-operation", "from": "extension", "to": "video", "label": "Pinned media command", "variant": "security" },
+    { "id": "capture-to-bridge", "from": "video", "to": "bridge", "label": "Tab audio / video" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Control plane", "items": ["BrowserRoom owns one identity peer plus the exclusive coordinator alias", "Authenticated encrypted hello admits members; snapshots carry term, sequence, order, ciphertext history and presentation", "One-second polls and seven-second authority timeout trigger eldest-first alias acquisition", "UUID ordering only avoids duplicate mesh initiation; admission order chooses successors"] },
+    { "dot": "emerald", "title": "GDrive request path", "items": ["Any member: player action → controlDrive → authenticated presenter channel", "Presenter: onDriveControl callback → GDriveBridge → content bridge → extension worker", "Worker checks token / room / tab / document, then runs mediaOperation on the pinned video", "Source acknowledgement returns actual time / duration / paused; epoch checks reject stale results", "State polling every 1.5 seconds updates coordinator snapshots; tokens never enter peer frames"] },
+    { "dot": "amber", "title": "Read the detailed guide", "items": ["Detailed component contracts, data models, message kinds, cleanup, limits and tests are in the architecture guide", "The diagram's backend-colored modules execute in browsers, not on an application server", "Pending adapters and real-device verification are intentionally not drawn as working components"] }
+  ]
+}

@@ -1,5 +1,7 @@
 # High-level design
 
+For the complete documentation, open the [HLD guide](https://ramirocruz.github.io/Kindred/architecture/#hld), [LLD guide](https://ramirocruz.github.io/Kindred/architecture/#lld), [HLD diagram](https://ramirocruz.github.io/Kindred/architecture/hld.html), or [LLD diagram](https://ramirocruz.github.io/Kindred/architecture/lld.html). The guide describes each active component, contracts, end-to-end flows, security limits and pending verification.
+
 Kindred is a static React/Vite app. Browsers—not an application backend—own the room.
 
 ## Room coordination
@@ -34,6 +36,6 @@ Verified: focused Jest coverage, production build, local room/chat browser check
 
 ## Interactive diagram
 
-Open the [hosted Archify diagram](https://ramirocruz.github.io/Kindred/architecture/) or the [versioned HTML](architecture/index.html). Its [authored candidate](../.archify/architecture-kindred-20261013-152248/candidate.json) is pinned to source commit `b3e9e8b`. Published HTML is a user-approved documentation asset; validation receipts remain local. GitHub Actions copies the diagram into the website's `architecture/` folder.
+Open the [hosted guide](https://ramirocruz.github.io/Kindred/architecture/) or [versioned guide HTML](architecture/index.html). New HLD/LLD candidates under `.archify/architecture-kindred-{hld,lld}-20261013-155600/` are pinned to runtime source `690b645`. Published diagram HTML is a user-approved documentation asset; validation receipts remain local. GitHub Actions explicitly copies guide/HLD/LLD/previous-overview HTML into the website's `architecture/` folder, excluding all other documents and receipts.
 
 The older service/LiveKit diagram is historical, not the current runtime.

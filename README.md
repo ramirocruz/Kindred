@@ -28,6 +28,8 @@ The migration app deploys separately from the legacy ChatGPT-hosted site:
 
 - App: [ramirocruz.github.io/Kindred](https://ramirocruz.github.io/Kindred/)
 - Diagram: [Kindred architecture](https://ramirocruz.github.io/Kindred/architecture/)
+- [Detailed HLD guide](https://ramirocruz.github.io/Kindred/architecture/#hld) · [HLD diagram](https://ramirocruz.github.io/Kindred/architecture/hld.html)
+- [Detailed LLD guide](https://ramirocruz.github.io/Kindred/architecture/#lld) · [LLD diagram](https://ramirocruz.github.io/Kindred/architecture/lld.html)
 
 In GitHub, open **Settings → Pages → Source** and choose **GitHub Actions** once. Pushes to `main` run typecheck/tests, package the GDrive extension, build the app and publish both pages. You can also run **Deploy Kindred to Pages** manually from **Actions**. Links are deployment targets; check the workflow for actual deployment success.
 
@@ -119,7 +121,7 @@ The former room-service source and LiveKit dependencies are removed; previous ve
 - [AGENTS.md](AGENTS.md): development rules.
 - `Context/index.md`: ignored local project notes; unavailable in fresh clones.
 - [High-level design](docs/architecture.md): current browser authority, PeerJS and GDrive paths.
-- [Interactive architecture diagram](https://ramirocruz.github.io/Kindred/architecture/): deployed alongside the app. The validated HTML is versioned at `docs/architecture/index.html`; authored source remains under `.archify/`.
+- [Architecture guide and diagrams](https://ramirocruz.github.io/Kindred/architecture/): detailed HLD/LLD, component contracts, request flows, message models and security/verification limits. Versioned HTML lives in `docs/architecture/`; Archify source candidates remain under `.archify/`.
 
 To open the diagram on macOS:
 

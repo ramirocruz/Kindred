@@ -1,0 +1,32 @@
+{
+  "schema_version": 1, "diagram_type": "architecture",
+  "meta": {
+    "title": "Kindred HLD — system responsibilities",
+    "output": ".archify/architecture-kindred-hld-20261013-155600/hld.html",
+    "quality_profile": "showcase",
+    "repository": { "url": "git@github.com:ramirocruz/Kindred.git", "revision": "690b64582e7b717ea1da101147a6cd62a8531d2b", "link_mode": "local-only" }
+  },
+  "components": [
+    { "id": "hosting", "type": "cloud", "label": "GitHub Pages", "sublabel": "Static app + design docs", "pos": [40, 70], "size": [220, 80], "sources": [{ "path": ".github/workflows/pages.yml", "line": 15, "end_line": 49 }, { "path": "scripts/prepare-pages.mjs", "line": 1, "end_line": 8 }] },
+    { "id": "browser", "type": "frontend", "label": "Kindred browser app", "sublabel": "React / Vite / TypeScript", "tag": "UI + browser-owned room", "pos": [440, 70], "size": [240, 80], "sources": [{ "path": "apps/web/src/App.tsx", "line": 1, "end_line": 28 }, { "path": "apps/web/src/features/room/useRoomConnection.ts", "line": 46, "end_line": 85 }] },
+    { "id": "peers", "type": "frontend", "label": "Other member browsers", "sublabel": "Replicated state + media", "tag": "Creator or elected host", "pos": [1000, 400], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/browser-room.ts", "line": 155, "end_line": 182 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 278, "end_line": 335 }, { "path": "apps/web/src/features/room/services/peer-media.ts", "line": 20, "end_line": 46 }] },
+    { "id": "infra", "type": "cloud", "label": "PeerJS signaling / ICE", "sublabel": "Public defaults; override optional", "tag": "Connection infrastructure only", "pos": [1000, 70], "size": [240, 80], "sources": [{ "path": "apps/web/src/features/room/services/peer-config.ts", "line": 9, "end_line": 27 }, { "path": "apps/web/src/features/room/services/browser-room.ts", "line": 74, "end_line": 98 }] },
+    { "id": "capture", "type": "security", "label": "GDrive extension", "sublabel": "Explicit tab + room binding", "tag": "Presenter installs · no debugger", "pos": [440, 400], "size": [240, 80], "sources": [{ "path": "extensions/gdrive/background.js", "line": 35, "end_line": 66 }, { "path": "extensions/gdrive/manifest.json", "line": 1, "end_line": 12 }] },
+    { "id": "drive", "type": "external", "label": "Google Drive video tab", "sublabel": "Source playback + captured A/V", "pos": [40, 400], "size": [220, 80], "sources": [{ "path": "extensions/gdrive/media.js", "line": 21, "end_line": 49 }, { "path": "extensions/gdrive/background.js", "line": 4, "end_line": 10 }] }
+  ],
+  "connections": [
+    { "id": "static-delivery", "from": "hosting", "to": "browser", "label": "HTTPS assets" },
+    { "id": "room-data-media", "from": "browser", "to": "peers", "label": "Encrypted WebRTC", "variant": "emphasis" },
+    { "id": "member-commands", "from": "peers", "to": "browser", "label": "Chat / playback commands", "variant": "security", "fromSide": "bottom", "toSide": "bottom" },
+    { "id": "member-signaling", "from": "peers", "to": "infra", "label": "Signaling / ICE", "variant": "dashed" },
+    { "id": "browser-signaling", "from": "browser", "to": "infra", "label": "Peer rendezvous", "variant": "dashed" },
+    { "id": "capture-to-app", "from": "capture", "to": "browser", "label": "Tab capture bridge", "variant": "security" },
+    { "id": "drive-controls", "from": "capture", "to": "drive", "label": "Pinned media controls", "variant": "security" },
+    { "id": "drive-stream", "from": "drive", "to": "browser", "label": "Captured audio / video", "fromSide": "top", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Who owns what?", "items": ["Pages serves files; it never owns rooms or carries application chat", "The creator browser is the first coordinator; the eldest reachable member can take over", "The presenter owns the captured tab; presenter and coordinator can be different people", "Every admitted member can control playback; only the presenter can unlink its tab"] },
+    { "dot": "emerald", "title": "State, chat and media", "items": ["Membership, ordered admission and latest 100 encrypted chat envelopes replicate in browser memory", "Camera/mic calls and captured movie streams use separate PeerJS media paths", "AES-GCM protects chat and control frames; WebRTC protects media transport", "Direct connections are preferred by WebRTC; TURN may relay encrypted traffic"] },
+    { "dot": "amber", "title": "Boundaries and current limits", "items": ["No application room service, database, LiveKit or Firebase in the active path", "Public signaling / STUN / TURN metadata exposure is accepted temporarily; hosting/privacy decision remains TODO", "Rooms end when every member leaves; a departed presenter's stream cannot transfer to a new host", "GDrive is implemented but real Drive audiovisual delivery still needs verification", "YouTube, web-video, personal-file and interactive screen-sharing adapters are pending"] }
+  ]
+}
