@@ -6,7 +6,13 @@ const iceServerSchema = z.object({
   username: z.string().optional(), credential: z.string().optional(),
 }).strict();
 
-export function peerOptions(endpoint: string, iceJson = '[]', relayOnly = false): PeerOptions {
+export function peerOptions(endpoint = '', iceJson = '[]', relayOnly = false): PeerOptions {
+  // TODO: revisit public infrastructure after the hosting/privacy decision.
+  // Omit config entirely to retain PeerJS's legacy signaling and ICE defaults.
+  if (!endpoint.trim()) {
+    if (relayOnly || iceJson !== '[]') throw new Error('Custom ICE settings require an explicit signaling endpoint.');
+    return { debug: 0 };
+  }
   const url = new URL(endpoint);
   const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   if ((url.protocol !== 'https:' && !(loopback && url.protocol === 'http:')) || url.username || url.password || url.search || url.hash) {

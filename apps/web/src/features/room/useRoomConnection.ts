@@ -39,7 +39,7 @@ export function useRoomConnection(session: RoomSession): RoomConnection {
     let room: BrowserRoom | null = null;
     const start = (): void => {
       try {
-        const options = peerOptions(import.meta.env.VITE_PEER_SERVER_URL || 'http://127.0.0.1:9000/kindred',
+        const options = peerOptions(import.meta.env.VITE_PEER_SERVER_URL || '',
           import.meta.env.VITE_ICE_SERVERS || '[]', import.meta.env.VITE_RELAY_ONLY === 'true');
         room = new BrowserRoom(session, options, {
           onState: (state) => { setMembers(state.members); setRoomName(state.name); setHostId(state.hostId); void inbox.receive('history', state.messages); },

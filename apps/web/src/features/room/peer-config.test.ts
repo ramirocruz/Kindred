@@ -1,6 +1,12 @@
 import { peerOptions } from './services/peer-config';
 
 describe('private signaling configuration', () => {
+  it('uses legacy PeerJS defaults when no endpoint is configured', () => {
+    expect(peerOptions()).toEqual({ debug: 0 });
+    expect(peerOptions('  ')).not.toHaveProperty('config');
+    expect(() => peerOptions('', '[]', true)).toThrow();
+    expect(() => peerOptions('', '[{"urls":"stun:example.org"}]')).toThrow();
+  });
   it('explicitly disables default third-party ICE services', () => {
     const config = peerOptions('http://127.0.0.1:9000/kindred');
     expect(config.host).toBe('127.0.0.1');

@@ -10,23 +10,17 @@ Install Node.js 20.19+ or 22.12+ and npm 11+. Open a terminal in the Kindred fol
 npm ci
 ```
 
-This installs dependencies. Start the connection helper in one terminal:
-
-```sh
-npm run signaling
-```
-
-Start the app in a second terminal:
+This installs dependencies. Start the app:
 
 ```sh
 npm run dev
 ```
 
-Open the address printed by Vite, normally [localhost:5173](http://localhost:5173). Create a room, use **Invite** to copy its full link, and open it in another tab/browser. Enter a name to join. Both terminals must remain running; Ctrl+C stops them.
+Open the address printed by Vite, normally [localhost:5173](http://localhost:5173). Create a room, use **Invite** to copy its full link, and open it in another browser. Enter a name to join. Keep the terminal running; Ctrl+C stops it. Internet access is required for the default public signaling servers.
 
-`signaling` runs the official PeerServer on `127.0.0.1:9000`. It helps browsers connect; it does not keep room membership, names, chat history or playback state. Local defaults use no third-party STUN/TURN servers.
+Like the legacy app, PeerJS uses its public signaling and STUN/TURN defaults. `npm run signaling` is optional: it runs a local PeerServer on `127.0.0.1:9000` when that endpoint is explicitly configured. Neither option manages room state.
 
-Localhost works only on your computer. Friends elsewhere need a hosted static app, an HTTPS self-hosted signaling endpoint and suitable self-hosted STUN/TURN configuration.
+Localhost works only on your computer. Friends elsewhere need a hosted HTTPS static app. Public connection infrastructure sees signaling metadata; TURN may relay encrypted traffic. **TODO:** decide hosting/privacy later and replace public defaults if self-hosting is selected.
 
 ## Room hosts and leaving
 
@@ -60,7 +54,7 @@ Rooms currently allow 16 members and retain the latest 100 encrypted messages in
 
 ## Connection settings
 
-Defaults work for local direct connections. To override them, copy the example:
+Defaults match the legacy PeerJS configuration. To use self-hosted infrastructure, copy the example:
 
 ```sh
 cp apps/web/.env.example apps/web/.env.local
@@ -68,8 +62,8 @@ cp apps/web/.env.example apps/web/.env.local
 
 Edit `.env.local` and restart Vite:
 
-- `VITE_PEER_SERVER_URL`: your HTTPS PeerServer endpoint. HTTP is accepted only on loopback.
-- `VITE_ICE_SERVERS`: a JSON array of your STUN/TURN settings. Default: `[]`.
+- `VITE_PEER_SERVER_URL`: blank uses public PeerJS defaults; otherwise your HTTPS PeerServer endpoint. HTTP is accepted only on loopback. For the optional local launcher, use `http://127.0.0.1:9000/kindred` and run `npm run signaling` separately.
+- `VITE_ICE_SERVERS`: a JSON array of your STUN/TURN settings when an endpoint is configured. Default for self-hosting: `[]`; without an endpoint, PeerJS supplies its own ICE defaults.
 - `VITE_RELAY_ONLY`: set to `true` to force TURN and conceal participant IPs from each other. Requires TURN configuration.
 
 Never put a TURN administrator/shared secret or other private server key in a `VITE_*` variable: these values reach browsers. Production needs a separate trusted way to issue temporary TURN credentials; that is not implemented here. The bundled signaling command binds to localhost and is a development tool, not a hardened public deployment.
