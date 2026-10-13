@@ -2,7 +2,7 @@
 
 ## Overview
 
-Kindred is a private watch-together app using React + Vite and a TypeScript room service. The approved media target is now PeerJS/WebRTC; existing LiveKit integration is transitional, not yet replaced. Styling uses Tailwind CSS; room coordination uses Socket.IO.
+Kindred is a static React + Vite watch-together app with browser-owned TypeScript room logic and PeerJS/WebRTC transport. Styling uses Tailwind CSS. PeerServer is connection infrastructure only; the custom room service, Socket.IO and LiveKit have been retired.
 
 See [README.md](README.md) for setup, commands, and current limitations.
 
@@ -21,7 +21,7 @@ See [README.md](README.md) for setup, commands, and current limitations.
 
 ## Scope
 
-- Build Kindred here: React/Vite web client, TypeScript room service, and PeerJS/WebRTC media.
+- Build Kindred here: React/Vite web client, browser room authority, and PeerJS/WebRTC media.
 - The deployed legacy static app remains in `../couch-club-watch-party`; do not modify or deploy it unless the task explicitly targets it.
 - Do not switch production to this workspace before feature parity and two-device verification.
 - Preserve original markup, appearance, and interactions during migration. Change infrastructure incrementally; do not redesign or silently replace working features with placeholders.
@@ -45,16 +45,17 @@ Before every task, read `Context/README.md`, `Context/index.md`, and the documen
 
 - Interface: React + Vite + TypeScript.
 - Styling: Tailwind CSS.
-- Room coordination: TypeScript + Socket.IO service.
+- Room coordination: creator browser initially; eldest reachable admitted member succeeds after acquiring the stable PeerServer rendezvous address. A returning former host joins as an ordinary member at the end of the admission order.
 - Camera, microphone, and screen media: PeerJS/WebRTC with explicitly configured self-hosted signaling and ICE servers. Never fall back to PeerJS public defaults.
 - Personal-file transport: WebTorrent, isolated from room coordination.
 - Keep credentials in environment variables; never commit them.
-- Require signed room tickets before issuing media tokens or joining room coordination.
+- Authenticate browser admission/control frames with the invitation capability before accepting room state or media. Peer IDs alone are not authorization. Do not reintroduce room-service APIs/tickets or database authority without a new user decision.
 
 ## Privacy and call quality
 
 - Use browser WebRTC encryption and HTTPS/WSS outside loopback development. Do not invent cryptographic algorithms or claim leak-proof security.
-- Authenticate signaling against room membership; use short-lived server-issued TURN credentials. A PeerJS identifier alone is not authorization.
+- Signaling must use an explicitly configured self-hosted endpoint. Browser room admission requires encrypted capability proof. Public signaling abuse controls and short-lived TURN credential issuance remain deployment gates; never embed a TURN shared secret in frontend configuration.
+- Coordinator authority orders state changes; everyone retains shared playback permissions. Replicate membership/admission order and bounded history. Pause authority writes on ownership loss; reject stale generations. Do not claim eldest polling alone solves arbitrary network partitions.
 - Encrypt chat on clients before transport. Key distribution, membership changes, replay rejection and server-side plaintext rejection are release gates; a tested encryption helper alone is not E2EE.
 - Keep chat keys out of server requests, logs and persistent browser storage. Never silently fall back to plaintext on encryption failure.
 - No recording, analytics or sensitive payload logging by default. Document metadata visibility, endpoint compromise, participant recording and P2P IP exposure.
