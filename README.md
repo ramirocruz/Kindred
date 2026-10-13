@@ -1,6 +1,6 @@
 # Kindred
 
-Kindred is a private watch-together app. Private rooms and shared text chat work locally. Video playback and calls are still being migrated.
+Kindred is a private watch-together app. Private rooms and invite-key encrypted shared chat work locally. Video playback and calls are still being migrated.
 
 ## Architecture diagram
 
@@ -12,7 +12,7 @@ If your Markdown viewer does not open HTML, run this from the project folder on 
 open .archify/architecture-kindred-20261013-020518/kindred.html
 ```
 
-No app server is needed. This generated diagram is currently local only—not included in a fresh clone. It describes the architecture as of 13 October 2026, not a live status dashboard.
+No app server is needed. The diagram is a saved snapshot: it predates encrypted chat and the decision to replace LiveKit with PeerJS. Read the sections below for current status.
 
 ## What works today
 
@@ -26,7 +26,7 @@ No app server is needed. This generated diagram is currently local only—not in
 
 - Original-style landing page, room setup, source navigation, settings, invite/leave dialogs, collapsible chat, and fullscreen layout.
 - Create a room, copy its private invitation, and join from another browser session using a display name. Only connected participants appear.
-- Send messages with Enter/send. Other members receive them; Clear hides messages only for you. The last 100 messages are kept while anyone remains connected.
+- Send invite-key encrypted messages with Enter/send. Other members receive decrypted messages in the browser; the room service stores and broadcasts ciphertext envelopes only. Clear hides messages only for you. The last 100 encrypted messages are kept while anyone remains connected.
 - Leaving or closing a tab removes its participant. Abrupt network loss is detected by Socket.IO heartbeat, not necessarily instantly.
 - TypeScript room service with typed room state and signed invite validation.
 - Automated tests and production builds.
@@ -35,13 +35,23 @@ LiveKit call UI is integrated but requires your media server configuration; live
 
 ## Camera and microphone setup
 
-**Architecture transition:** PeerJS/WebRTC with self-hosted signaling and STUN/TURN is now the approved target. The LiveKit implementation below still exists until that replacement is tested. Chat encryption primitives have tests, but chat currently remains readable by the room service; end-to-end encryption is not enabled yet.
+PeerJS/WebRTC with self-hosted signaling and STUN/TURN is now the approved target. The LiveKit implementation below still exists until that replacement is tested.
 
 Set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` in the room service's ignored `.env.local`, then restart the service. Use a LiveKit Cloud project or your own LiveKit server. Never place the API secret in the web app.
 
 In a room, select **Join call**. Camera and microphone start off; hover over your card to enable them. Your own preview is mirrored; outgoing video is unchanged. If the browser blocks sound, select **Enable call audio**. **Leave call** disconnects media without leaving chat.
 
 Use HTTPS outside localhost. Two-device video/audio, permissions, reconnection and device cleanup still require live verification before release.
+
+## Encrypted chat and private links
+
+Each new room gets a random chat key generated in the browser. The full invitation carries it after `#` in the URL. The browser sends only encrypted message content to the room service; the service keeps sender names and other room metadata visible. Anyone with the full link can join and read the retained chat history.
+
+Treat invitations like passwords. The key can remain in browser history and copied links; no key is written to localStorage or sent in our HTTP/socket requests. Use HTTPS outside localhost and share links through a trusted channel. A browser extension, compromised device or modified app code can still read chat.
+
+This invite-key design has no forward secrecy or automatic key rotation. Leaving does not revoke a saved invitation. To exclude a previous member, create a new room and share its new link only with the remaining people. It is not an audited group messaging protocol or independent identity verification.
+
+The service retains at most 100 encrypted messages while the room is occupied. Replay tracking is bounded: after 10,000 accepted messages, create a new room. Missing or invalid encryption never falls back to plaintext. A message that fails decryption appears as unavailable while other messages remain usable. Old links without a chat key must be replaced with a new full invitation.
 
 ## What you need
 
@@ -93,7 +103,7 @@ npm run dev
 
 Open the address printed in the terminal, normally `http://localhost:5173`.
 
-Enter your name and select **Create a private room**. Open **Invite**, copy the link, and open it in another browser or private window. Enter another name, join, then expand **Messages**. Both terminals must stay running. Vite forwards API and socket traffic to port 3001.
+Enter your name and select **Create a private room**. Open **Invite**, copy the full link, and open it in another browser or private window. The `chatKey` parameter stays in the URL fragment; do not remove it or guests cannot decrypt chat. Enter another name, join, then expand **Messages**. Both terminals must stay running. Vite forwards API and socket traffic to port 3001.
 
 `localhost` links only work on your computer. Internet sharing requires a deployed service and HTTPS configuration; do not expose the development server publicly.
 
@@ -145,6 +155,6 @@ Read [Context/README.md](Context/README.md) and [AGENTS.md](AGENTS.md) before ma
 
 ## Current limitation
 
-Invitations grant access to anyone who has the link; they are not account-based permissions. They expire after 24 hours or a service restart. Rooms are stored in memory; chat history is deleted when the last member leaves. Reloading asks you to join again. A reconnect after ticket expiry requires a new room.
+Invitations grant access to anyone who has the full link; they are not account-based permissions. The same full link also carries the browser-only chat key, so anyone with it can decrypt room chat while the room exists. Links expire after 24 hours or a service restart. Rooms are stored in memory; encrypted chat history is deleted when the last member leaves. Reloading asks you to join again. A reconnect after ticket expiry requires a new room.
 
 The app is not ready for public use. Media, public-service hardening, persistent-storage decisions, and two-device verification remain. The dependency check reports 20 moderate advisories requiring review before deployment.

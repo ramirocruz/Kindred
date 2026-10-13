@@ -16,7 +16,7 @@ export function RoomChat({ connection }: { connection: RoomConnection }): React.
       </button>
       {open && (
         <div className="chat-content">
-          <div className="chat-meta"><p className="preview-note">{connection.status} · Clear hides messages only for you.</p>
+          <div className="chat-meta"><p className="preview-note">{connection.status} · {connection.chatStatus} · Clear hides messages only for you.</p>
             {messages.length > 0 && <button onClick={() => setHiddenIds(connection.messages.map((message) => message.id))} aria-label="Clear messages">Clear</button>}
           </div>
           <div className="chat-messages" role="log" aria-label="Messages" aria-live="polite">
@@ -30,7 +30,7 @@ export function RoomChat({ connection }: { connection: RoomConnection }): React.
             if (sending || !draft.trim()) return;
             setSending(true); setError('');
             try { await connection.send(draft.trim()); setDraft(''); }
-            catch { setError('Message not confirmed. Check the conversation before retrying.'); }
+            catch { setError('Encrypted message not confirmed. Check the conversation before retrying.'); }
             finally { setSending(false); }
           }}>
             <input aria-label="Message" placeholder="Say something nice…" maxLength={2000}

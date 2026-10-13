@@ -1,14 +1,26 @@
-import { createChatKey, decryptChat, encryptChat } from './services/chat-crypto';
+import { createChatKey, createChatSecret, decryptChat, encryptChat, importChatKey } from './services/chat-crypto';
 
 const context = { roomId: 'room-a', senderId: 'sender-a', messageId: 'message-a' };
 
-describe('chat encryption foundation (not yet connected to transport)', () => {
+describe('chat encryption', () => {
   it('round-trips Unicode with a non-exportable AES-256 key', async () => {
     const key = await createChatKey();
     expect(key.extractable).toBe(false);
     const encrypted = await encryptChat(key, 'Hello 👋 नमस्ते', context);
     expect(encrypted).not.toHaveProperty('text');
     await expect(decryptChat(key, encrypted, context)).resolves.toBe('Hello 👋 नमस्ते');
+  });
+  it('imports shareable invite secrets as non-exportable AES-256 keys', async () => {
+    const secret = createChatSecret();
+    expect(secret).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    const key = await importChatKey(secret);
+    expect(key.extractable).toBe(false);
+    await expect(decryptChat(key, await encryptChat(key, 'Invite secret works', context), context)).resolves.toBe('Invite secret works');
+  });
+
+  it('rejects malformed invite secrets', async () => {
+    await expect(importChatKey('not-a-key')).rejects.toThrow();
+    await expect(importChatKey('a'.repeat(42))).rejects.toThrow();
   });
 
   it('uses a fresh nonce for repeated messages', async () => {

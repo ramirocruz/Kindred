@@ -1,11 +1,14 @@
+import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { io, type Socket } from 'socket.io-client';
 import { attachRoomSocket } from '../src/transport/socket-server.js';
 import { RoomRegistry } from '../src/rooms/room-registry.js';
 import { Invitations } from '../src/rooms/invitations.js';
 
+const encrypted = { version: 1, iv: Array(12).fill(7), ciphertext: Array(18).fill(11) };
+
 describe('real room transport', () => {
-  it('authorizes joins, delivers scoped messages and removes disconnected members', async () => {
+  it('authorizes joins, delivers scoped encrypted messages and removes disconnected members', async () => {
     const http = createServer();
     const registry = new RoomRegistry();
     const secret = 'test-secret-longer-than-32-characters';
@@ -27,14 +30,29 @@ describe('real room transport', () => {
       const second = invites.join(invite, 'Guest', Date.now())!;
       const a = await connect(); const b = await connect(); const outsider = await connect();
       expect(await outsider.timeout(2000).emitWithAck('room:join', { roomId: first.id, ticket: 'invalid' })).toHaveProperty('error');
-      expect(await outsider.timeout(2000).emitWithAck('chat:send', { text: 'No access' })).toHaveProperty('error');
+      expect(await outsider.timeout(2000).emitWithAck('chat:send', { id: randomUUID(), encrypted })).toHaveProperty('error');
       await a.timeout(2000).emitWithAck('room:join', { roomId: first.id, ticket: first.ticket });
       await b.timeout(2000).emitWithAck('room:join', { roomId: second.id, ticket: second.ticket });
       expect(registry.get(first.id)?.members.size).toBe(2);
+      expect(await a.timeout(2000).emitWithAck('chat:send', { text: 'Hello' })).toHaveProperty('error');
+      expect(await a.timeout(2000).emitWithAck('chat:send', { id: randomUUID(), encrypted: { ...encrypted, iv: [7] } })).toHaveProperty('error');
+      expect(await a.timeout(2000).emitWithAck('chat:send', { author: 'Forged', encrypted, id: randomUUID() })).toHaveProperty('error');
+      const id = randomUUID();
       const delivered = new Promise<unknown>((resolve) => b.once('chat:message', resolve));
-      await a.timeout(2000).emitWithAck('chat:send', { text: 'Hello', author: 'Forged' });
-      expect(await delivered).toMatchObject({ text: 'Hello', author: 'Host' });
-      expect(await b.timeout(2000).emitWithAck('chat:send', { text: ' '.repeat(4) })).toHaveProperty('error');
+      await a.timeout(2000).emitWithAck('chat:send', { id, encrypted });
+      expect(await delivered).toMatchObject({ author: 'Host', encrypted, id, senderId: first.identity });
+      expect(await b.timeout(2000).emitWithAck('chat:send', { id, encrypted })).toHaveProperty('error');
+      const otherInvite = invites.create('Other room', true, Date.now());
+      const other = invites.join(otherInvite, 'Outsider', Date.now())!;
+      const otherHistory = new Promise<unknown[]>((resolve) => outsider.once('chat:history', resolve));
+      await outsider.timeout(2000).emitWithAck('room:join', { roomId: other.id, ticket: other.ticket });
+      expect(await otherHistory).toEqual([]);
+      const history = new Promise<unknown[]>((resolve) => b.once('chat:history', resolve));
+      await b.timeout(2000).emitWithAck('room:join', { roomId: second.id, ticket: second.ticket });
+      const stored = await history;
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).not.toHaveProperty('text');
+      expect(stored[0]).toMatchObject({ encrypted, id });
       const state = new Promise<{ members: unknown[] }>((resolve) => a.once('room:state', resolve));
       b.disconnect();
       expect((await state).members).toHaveLength(1);

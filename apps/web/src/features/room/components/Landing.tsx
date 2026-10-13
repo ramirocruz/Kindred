@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createLocalRoom } from "../local-room";
 import type { LocalRoom } from "../local-room";
+import { parseInviteLink } from "../services/session";
 import { Dialog } from "./Dialog";
 export function Landing({
   onCreate,
@@ -12,8 +13,10 @@ export function Landing({
   const [name, setName] = useState("");
   const [roomName, setRoomName] = useState("Friday Night Picks");
   const [reactions, setReactions] = useState(true);
-  const [modal, setModal] = useState<"create" | "join" | null>(location.hash.startsWith('#invite=') ? 'join' : null);
-  const [inviteLink, setInviteLink] = useState(location.hash.startsWith('#invite=') ? location.href : '');
+  const initialInvite = parseInviteLink(location.href, location.href);
+  const [modal, setModal] = useState<"create" | "join" | null>(initialInvite ? 'join' : null);
+  const [inviteLink, setInviteLink] = useState(initialInvite ? location.href : '');
+  const parsedInvite = parseInviteLink(inviteLink, location.href);
   return (
     <main className="landing">
       <section className="hero">
@@ -67,7 +70,7 @@ export function Landing({
           </article>
         </div>
         <p className="preview-note">
-          Private rooms and chat · media playback and calls are coming next.
+          Private rooms and encrypted chat · media playback and calls are coming next.
         </p>
       </section>
       {modal === "create" && (
@@ -153,14 +156,14 @@ export function Landing({
           eyebrow="Private room invite"
           onClose={() => setModal(null)}
         >
-          <p className="dialog-description">Enter your name and the exact invitation link.</p>
+          <p className="dialog-description">Enter your name and the full invitation link so you can join and read the room’s encrypted chat.</p>
           <label className="field">Your display name<input value={name} maxLength={24} onChange={(event) => setName(event.target.value)} /></label>
           <label className="field">Room link<input value={inviteLink} onChange={(event) => setInviteLink(event.target.value)} /></label>
           <div className="dialog-actions">
             <button
               className="primary-button"
-              disabled={!name.trim() || !inviteLink.includes('#invite=')}
-              onClick={() => onJoin(name.trim(), inviteLink.split('#invite=')[1] ?? '')}
+              disabled={!name.trim() || !parsedInvite}
+              onClick={() => onJoin(name.trim(), inviteLink)}
             >
               Join room →
             </button>

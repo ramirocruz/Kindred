@@ -1,12 +1,14 @@
 import { z } from 'zod';
 
-const envelopeSchema = z.object({
+const CHAT_KEY_BYTES = 32;
+
+export const encryptedChatSchema = z.object({
   version: z.literal(1),
   iv: z.array(z.number().int().min(0).max(255)).length(12),
   ciphertext: z.array(z.number().int().min(0).max(255)).min(17).max(8016),
 }).strict();
 
-export type EncryptedChat = z.infer<typeof envelopeSchema>;
+export type EncryptedChat = z.infer<typeof encryptedChatSchema>;
 
 export interface ChatContext {
   roomId: string;
@@ -20,11 +22,39 @@ function authenticatedContext(context: ChatContext): Uint8Array<ArrayBuffer> {
   ]));
 }
 
-export async function createChatKey(): Promise<CryptoKey> {
-  return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+function encodeBase64Url(bytes: Uint8Array): string {
+  let binary = '';
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
 
-// Transport/key distribution is intentionally separate. Never send this key to the room service.
+function decodeBase64Url(value: string): Uint8Array {
+  if (!/^[A-Za-z0-9_-]{43}$/.test(value)) throw new Error('Invalid chat key encoding.');
+  const padded = value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - (value.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  if (encodeBase64Url(bytes) !== value) throw new Error('Invalid chat key encoding.');
+  return bytes;
+}
+
+export function createChatSecret(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(CHAT_KEY_BYTES));
+  return encodeBase64Url(bytes);
+}
+
+export async function importChatKey(secret: string): Promise<CryptoKey> {
+  const bytes = decodeBase64Url(secret);
+  if (bytes.byteLength !== CHAT_KEY_BYTES) throw new Error('Chat key must be 256 bits.');
+  const rawKey = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(rawKey).set(bytes);
+  return crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+export async function createChatKey(): Promise<CryptoKey> {
+  return importChatKey(createChatSecret());
+}
+
 export async function encryptChat(key: CryptoKey, text: string, context: ChatContext): Promise<EncryptedChat> {
   if (!text.trim() || text.length > 2000) throw new Error('Message must contain 1–2000 characters.');
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -35,7 +65,7 @@ export async function encryptChat(key: CryptoKey, text: string, context: ChatCon
 }
 
 export async function decryptChat(key: CryptoKey, payload: unknown, context: ChatContext): Promise<string> {
-  const envelope = envelopeSchema.parse(payload);
+  const envelope = encryptedChatSchema.parse(payload);
   const plaintext = await crypto.subtle.decrypt({
     name: 'AES-GCM', iv: new Uint8Array(envelope.iv),
     additionalData: authenticatedContext(context), tagLength: 128,

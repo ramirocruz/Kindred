@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { sources } from "../local-room";
 import type { Source } from "../local-room";
 import type { RoomSession } from '../services/session';
+import { buildInviteFragment } from '../services/session';
 import { useRoomConnection } from '../useRoomConnection';
 import { Dialog } from "./Dialog";
 import { MediaIcon } from "./MediaIcon";
@@ -51,7 +52,7 @@ export function WatchRoom({
   onLeave: () => void;
 }): React.JSX.Element {
   const connection = useRoomConnection(room);
-  const inviteUrl = `${location.origin}${location.pathname}#invite=${room.invite}`;
+  const inviteUrl = `${location.origin}${location.pathname}${buildInviteFragment(room.invite, room.chatInviteSecret)}`;
   const [source, setSource] = useState<Source | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [modal, setModal] = useState<
@@ -318,7 +319,7 @@ export function WatchRoom({
             <>
             <p className="dialog-description">
               {modal === "invite"
-                ? "Anyone with this link can join. It expires after 24 hours or a service restart. Keep it private."
+                ? "Anyone with this full link can join and decrypt chat until the room expires after 24 hours or a service restart. Keep it private."
                 : "GDrive uses playback controls. Screen share offers viewing or interactive control. Extension pairing is being migrated; the new room cannot link a tab yet."}
             </p>
             <label className="field">Room link<input readOnly value={inviteUrl} onFocus={(event) => event.target.select()} /></label>

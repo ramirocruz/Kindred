@@ -1,5 +1,4 @@
 import type { Server as HttpServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
 
 import { Server } from 'socket.io';
 import { z } from 'zod';
@@ -13,6 +12,17 @@ const joinPayloadSchema = z.object({
   ticket: z.string().min(1),
 });
 
+const encryptedChatSchema = z.object({
+  version: z.literal(1),
+  iv: z.array(z.number().int().min(0).max(255)).length(12),
+  ciphertext: z.array(z.number().int().min(0).max(255)).min(17).max(8016),
+}).strict();
+
+const chatPayloadSchema = z.object({
+  id: z.string().uuid(),
+  encrypted: encryptedChatSchema,
+}).strict();
+
 const playbackPayloadSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('play') }),
   z.object({ type: z.literal('pause') }),
@@ -23,6 +33,13 @@ interface ConnectedMember {
   identity: string;
   roomId: string;
   expiresAt: number;
+}
+
+interface EncryptedChatMessage {
+  id: string;
+  author: string;
+  senderId: string;
+  encrypted: z.infer<typeof encryptedChatSchema>;
 }
 
 interface RoomLogger {
@@ -64,7 +81,8 @@ export function attachRoomSocket(
 ): Server {
   const io = new Server(server, { cors: { origin } });
   const members = new Map<string, ConnectedMember>();
-  const histories = new Map<string, { id: string; author: string; text: string }[]>();
+  const histories = new Map<string, EncryptedChatMessage[]>();
+  const seenMessageIds = new Map<string, Set<string>>();
 
   io.on('connection', (socket) => {
     let lastMessageAt = 0;
@@ -99,14 +117,24 @@ export function attachRoomSocket(
     socket.on('chat:send', (payload: unknown, acknowledge: (response: unknown) => void) => {
       if (typeof acknowledge !== 'function') return;
       const member = members.get(socket.id);
-      const parsed = z.object({ text: z.string().trim().min(1).max(2000) }).safeParse(payload);
+      const parsed = chatPayloadSchema.safeParse(payload);
       const author = member && registry.get(member.roomId)?.members.get(member.identity);
       if (!member || !author || !parsed.success || member.expiresAt <= Date.now()) {
-        acknowledge({ error: 'Message rejected. Check your connection and invitation.' }); return;
+        acknowledge({ error: 'Encrypted message rejected. Check your connection and invitation.' }); return;
       }
       if (Date.now() - lastMessageAt < 300) { acknowledge({ error: 'Please wait before sending another message.' }); return; }
+      const seen = seenMessageIds.get(member.roomId) ?? new Set<string>();
+      if (seen.has(parsed.data.id)) {
+        acknowledge({ error: 'Duplicate encrypted message rejected.' }); return;
+      }
+      // Retain replay IDs for the room lifetime without unbounded memory growth.
+      if (seen.size >= 10000) {
+        acknowledge({ error: 'Room message limit reached. Create a new room to continue.' }); return;
+      }
       lastMessageAt = Date.now();
-      const message = { id: randomUUID(), author: author.displayName, text: parsed.data.text };
+      seen.add(parsed.data.id);
+      seenMessageIds.set(member.roomId, seen);
+      const message = { id: parsed.data.id, author: author.displayName, senderId: member.identity, encrypted: parsed.data.encrypted } satisfies EncryptedChatMessage;
       const history = [...(histories.get(member.roomId) ?? []), message].slice(-100);
       histories.set(member.roomId, history);
       io.to(member.roomId).emit('chat:message', message);
@@ -135,7 +163,10 @@ export function attachRoomSocket(
     socket.on('disconnect', () => {
       const roomId = leaveRoom(io, members, registry, socket.id);
       if (roomId) {
-        if (!registry.get(roomId)) histories.delete(roomId);
+        if (!registry.get(roomId)) {
+          histories.delete(roomId);
+          seenMessageIds.delete(roomId);
+        }
         logger.info({ roomId, socketId: socket.id }, 'Room member disconnected');
       }
     });
