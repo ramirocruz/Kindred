@@ -34,6 +34,6 @@ Verified: focused Jest coverage, production build, local room/chat browser check
 
 ## Interactive diagram
 
-Open the [current local Archify diagram](../.archify/architecture-kindred-20261013-152248/kindred.html). Its [authored candidate](../.archify/architecture-kindred-20261013-152248/candidate.json) is pinned to source commit `b3e9e8b`; generated HTML and validation receipts stay local. A fresh clone contains this design and the candidate, not the generated HTML.
+Open the [hosted Archify diagram](https://ramirocruz.github.io/Kindred/architecture/) or the [versioned HTML](architecture/index.html). Its [authored candidate](../.archify/architecture-kindred-20261013-152248/candidate.json) is pinned to source commit `b3e9e8b`. Published HTML is a user-approved documentation asset; validation receipts remain local. GitHub Actions copies the diagram into the website's `architecture/` folder.
 
 The older service/LiveKit diagram is historical, not the current runtime.

@@ -22,7 +22,19 @@ Like the legacy app, PeerJS uses its public signaling and STUN/TURN defaults. `n
 
 Localhost works only on your computer. Friends elsewhere need a hosted HTTPS static app. Public connection infrastructure sees signaling metadata; TURN may relay encrypted traffic. **TODO:** decide hosting/privacy later and replace public defaults if self-hosting is selected.
 
+## GitHub Pages deployment
+
+The migration app deploys separately from the legacy ChatGPT-hosted site:
+
+- App: [ramirocruz.github.io/Kindred](https://ramirocruz.github.io/Kindred/)
+- Diagram: [Kindred architecture](https://ramirocruz.github.io/Kindred/architecture/)
+
+In GitHub, open **Settings → Pages → Source** and choose **GitHub Actions** once. Pushes to `main` run typecheck/tests, package the GDrive extension, build the app and publish both pages. You can also run **Deploy Kindred to Pages** manually from **Actions**. Links are deployment targets; check the workflow for actual deployment success.
+
+`npm run build:pages` produces the Pages artifact in `apps/web/dist/`, including architecture and extension downloads. Normal `npm run dev` stays at `/`; Pages uses `/Kindred/`. Context, environment files and validation receipts are never published. Reinstall/reload Kindred GDrive v0.9.1 to use hosted rooms.
+
 ## Room hosts and leaving
+
 
 The creator browser initially coordinates the room. Members keep copies of the membership order and encrypted chat history. After the host leaves, members poll for a successor in admission order. The eldest reachable member must acquire the stable signaling room address before becoming host. The same invite continues to work after handover.
 
@@ -64,7 +76,7 @@ The original Drive tab becomes silent during capture; movie audio is rendered on
 
 This migration follows the legacy accessible-video/frame discovery and pinned-document playback commands. Unsupported/protected players fail explicitly. Actual authenticated Drive capture and remote audiovisual delivery still need manual verification; unit tests are not proof of these.
 
-Extension source: `extensions/gdrive/`. You can also load that folder directly. Run `npm run package:extension` after editing it to refresh the download. Localhost and 127.0.0.1 on port 5173 are allowed; other origins need explicit extension allowlist changes. The v0.9.0 GDrive build is for new React rooms, not legacy invitations.
+Extension source: `extensions/gdrive/`. You can also load that folder directly. Run `npm run package:extension` after editing it to refresh the download. Localhost and 127.0.0.1 on port 5173 and the Kindred GitHub Pages path are allowed; other origins need explicit extension allowlist changes. The v0.9.1 GDrive build is for new React rooms, not legacy invitations.
 
 ## Connection settings
 
@@ -96,7 +108,7 @@ The production website is generated in `apps/web/dist/`. `npm run lint` currentl
 
 The original landing page, source segments, compact dialogs, translucent chat/reactions, adjustable divider, fullscreen layout and participant cards remain. Encrypted room chat, shared reactions and host succession now use WebRTC.
 
-GDrive capture/playback integration is implemented with a new v0.9.0 extension and requires real Drive/two-device verification. YouTube/web-video/personal-file delivery and interactive screen-sharing pairing remain pending; their submission/player actions remain disabled. Interactive setup still downloads the legacy v0.8.0 build, not a working React integration. Do not switch production until feature parity and real two-device checks pass.
+GDrive capture/playback integration is implemented with a new v0.9.1 extension and requires real Drive/two-device verification. YouTube/web-video/personal-file delivery and interactive screen-sharing pairing remain pending; their submission/player actions remain disabled. Interactive setup still downloads the legacy v0.8.0 build, not a working React integration. The legacy ChatGPT site remains unchanged; Pages is a separate migration deployment.
 
 The former room-service source and LiveKit dependencies are removed; previous versions are recoverable in Git. Ignored local environment/build files from earlier development may still exist and are unused.
 
@@ -107,10 +119,10 @@ The former room-service source and LiveKit dependencies are removed; previous ve
 - [AGENTS.md](AGENTS.md): development rules.
 - `Context/index.md`: ignored local project notes; unavailable in fresh clones.
 - [High-level design](docs/architecture.md): current browser authority, PeerJS and GDrive paths.
-- [Interactive architecture diagram](.archify/architecture-kindred-20261013-152248/kindred.html): generated local Archify view of the current design; HTML is not included in fresh clones. Its authored candidate is versioned alongside it.
+- [Interactive architecture diagram](https://ramirocruz.github.io/Kindred/architecture/): deployed alongside the app. The validated HTML is versioned at `docs/architecture/index.html`; authored source remains under `.archify/`.
 
 To open the diagram on macOS:
 
 ```sh
-open .archify/architecture-kindred-20261013-152248/kindred.html
+open docs/architecture/index.html
 ```

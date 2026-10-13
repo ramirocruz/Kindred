@@ -37,6 +37,8 @@ describe('legacy-derived extension media operations', () => {
     expect(roomId(`http://127.0.0.1:5173/#invite=${id}&chatKey=secret`)).toBe(id);
     expect(roomId(`http://localhost:5173/#invite=${id}`)).toBe(id);
     expect(roomId(`https://evil.example/#invite=${id}`)).toBeNull();
+    expect(roomId(`https://ramirocruz.github.io/Kindred/#invite=${id}`)).toBe(id);
+    expect(roomId(`https://ramirocruz.github.io/other/#invite=${id}`)).toBeNull();
     expect(roomId(`http://localhost:5173/#invite=${id}&invite=${id}`)).toBeNull();
     const popup = readFileSync(new URL('popup.js', extension), 'utf8');
     expect(popup).not.toContain('.hash');

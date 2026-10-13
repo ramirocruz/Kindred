@@ -12,6 +12,7 @@ See [README.md](README.md) for setup, commands, and current limitations.
 - Commit coherent, scoped changes as progress is made. Never stage secrets, generated output, IDE files, or ignored Context notes.
 - Update `README.md` whenever setup, commands, dependencies, user-visible capabilities, or significant limitations change.
 - Current `lint` scripts run TypeScript checks, not ESLint.
+- User-approved architecture HTML under `docs/architecture/` is a deployable documentation asset, exempt from the generated-build-output exclusion. Keep its validated source candidate and provenance reference; never publish local Context or validation receipts.
 
 ## Testing
 
@@ -24,6 +25,7 @@ See [README.md](README.md) for setup, commands, and current limitations.
 - Build Kindred here: React/Vite web client, browser room authority, and PeerJS/WebRTC media.
 - The deployed legacy static app remains in `../couch-club-watch-party`; do not modify or deploy it unless the task explicitly targets it.
 - Do not switch production to this workspace before feature parity and two-device verification.
+- GitHub Pages is the separately approved migration deployment at `https://ramirocruz.github.io/Kindred/`; the legacy ChatGPT-hosted site remains unchanged. Actions must run tests/typecheck before deployment. Keep Pages subpath assets and extension origin/path allowlists aligned.
 - Preserve original markup, appearance, and interactions during migration. Change infrastructure incrementally; do not redesign or silently replace working features with placeholders.
 - Before migrating or correcting a UI feature, inspect its legacy markup, CSS, and handlers directly. Record deliberate differences; screenshots supplement source comparison rather than replace it.
 - Keep unrelated cleanup and refactors out of the task. Explicitly document incomplete parity.

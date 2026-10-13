@@ -3,7 +3,7 @@ const status = document.querySelector('#status'), button = document.querySelecto
 let source;
 async function initialize() {
   [source] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabs = await chrome.tabs.query({ url: ['http://localhost:5173/*', 'http://127.0.0.1:5173/*', 'https://kindred.cheekyscout32.chatgpt.site/*'] });
+  const tabs = await chrome.tabs.query({ url: ['http://localhost:5173/*', 'http://127.0.0.1:5173/*', 'https://ramirocruz.github.io/Kindred/*', 'https://kindred.cheekyscout32.chatgpt.site/*'] });
   for (const tab of tabs) {
     if (!roomId(tab.url)) continue;
     const option = document.createElement('option'); option.value = tab.id;
