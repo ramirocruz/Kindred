@@ -17,7 +17,7 @@ Updated 2026-10-13. Baseline evidence revision: `ff2a75c`; current performance r
 
 ## Verified scope
 
-72 Jest tests, strict typecheck and Pages build pass after performance remediation. Local browser tests cover room/chat, ordinary host succession and selected UI interactions. GDrive guest commands/media cleanup and capture profile have automated fixture coverage, not real Drive audio/video proof. See [testing](testing.md).
+73 Jest tests, strict typecheck and Pages build pass locally after performance remediation. First CI test run failed; deployment remains pending retry. Local browser tests cover room/chat and ordinary host succession. GDrive controls/profile have fixture coverage, not real Drive audiovisual/performance proof. See [testing](testing.md).
 
 ## Public deployment
 

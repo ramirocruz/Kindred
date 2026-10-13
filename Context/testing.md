@@ -4,7 +4,9 @@ Updated 2026-10-13. Evidence applies to listed revisions, not every later change
 
 | Revision / area | Verified evidence | Limit |
 | --- | --- | --- |
-| Current performance remediation | 72 Jest cases/21 suites, typecheck/Pages build/diff checks; actual encrypted mesh deltas under 2KB, gap repair, old-client fallback, pending-seek dispatch, stale unlink, history suppression and capture profile/fallback; local guest chat/handover writes pass | No real authenticated Drive capture/settings or measured stutter improvement |
+| Current performance remediation | 73 Jest cases/21 suites, typecheck/Pages build/diff checks; encrypted mesh deltas under 2KB, gap repair, old-client fallback, pending-seek dispatch, stale unlink, history suppression, capture fallback and paused alias-only heartbeat; local guest chat/handover writes pass | No real authenticated Drive capture/settings or measured stutter improvement |
+
+CI run 38395095485 at 530e6f1 failed npm test; deployment skipped. Detailed logs require signed-in access; public annotation only reports exit 1. Fixture now yields through native crypto (not only setImmediate loops), assertions tolerate unrelated heartbeat packets, and built-in Jest GitHub Actions reporter exposes future failure annotations. These are deterministic-test hardening, not a proven diagnosis of that inaccessible failure. Retry pending.
 | ff2a75c room labels | 62 Jest cases/20 suites, typecheck, extension packaging, Pages build, diff check; browser custom title/header and title reset on leave | Popup label helper tested, actual installed Chrome extension not tested |
 | ff2a75c deployment | Actions 38386807562 succeeds; hosted ZIP HTTP200 with v0.9.2 manifest and roomLabel popup | CI ZIP timestamps change digest; no byte-equality claim |
 | a21357a docs | 61 tests, source-aware Archify HLD/LLD automated gates, browser guide expansion/diagram render and live docs | Optional perceptual review not requested; no security/media certification |

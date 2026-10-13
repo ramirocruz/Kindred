@@ -29,6 +29,7 @@ class Connection extends EventEmitter {
 }
 class FixturePeer extends EventEmitter {
   public static peers = new Map<string, FixturePeer>();
+  public static pauseMesh = false;
   public open = false;
   public destroyed = false;
   public disconnected = false;
@@ -43,6 +44,7 @@ class FixturePeer extends EventEmitter {
   }
   public connect(id: string): Connection {
     const connection = new Connection(id, crypto.randomUUID()); this.connections.push(connection);
+    if (FixturePeer.pauseMesh && !id.startsWith('kindred-room-')) return connection;
     queueMicrotask(() => {
       const peer = FixturePeer.peers.get(id);
       if (!peer) { connection.emit('error', new Error('Missing peer')); return; }
@@ -67,7 +69,11 @@ class FixturePeer extends EventEmitter {
 jest.unstable_mockModule('peerjs', () => ({ default: FixturePeer }));
 const { BrowserRoom } = await import('./services/browser-room');
 const flush = async (): Promise<void> => {
-  for (let index = 0; index < 60; index++) await new Promise<void>((resolve) => setImmediate(resolve));
+  for (let index = 0; index < 60; index++) {
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    // Yield through native crypto completion, not only a fast JavaScript event loop.
+    await crypto.subtle.digest('SHA-256', new Uint8Array());
+  }
 };
 const observer = (): RoomObserver => ({ onState: jest.fn(), onStatus: jest.fn(), onReaction: jest.fn(), onStreams: jest.fn(), onScreen: jest.fn(),
   onDriveControl: jest.fn<(command: DriveAction) => Promise<PlaybackState>>(async (command) => ({ time: command.time ?? 25, duration: 100, paused: command.action === 'pause' })) });
@@ -90,6 +96,21 @@ async function pair(): Promise<Pair> {
 }
 
 describe('authenticated guest GDrive controls', () => {
+  it('keeps an alias-only guest admitted while paused playback sends no deltas', async () => {
+    jest.useFakeTimers({ doNotFake: ['setImmediate', 'queueMicrotask'] });
+    FixturePeer.pauseMesh = true;
+    const rooms = await pair();
+    try {
+      await rooms.host.updatePresentation({ ownerId: rooms.hostSession.identity, epoch: crypto.randomUUID(), title: 'Movie', playback: { time: 30, duration: 100, paused: true }, error: '' }); await flush();
+      for (let second = 0; second < 10; second++) {
+        jest.advanceTimersByTime(1000); await flush();
+      }
+      expect(rooms.states.at(-1)?.members).toHaveLength(2);
+      expect(rooms.states.at(-1)?.hostId).toBe(rooms.hostSession.identity);
+      expect(rooms.guestObserver.onStatus).not.toHaveBeenCalledWith('Polling for the next host…');
+      expect(rooms.states.at(-1)?.presentation?.playback?.paused).toBe(true);
+    } finally { rooms.close(); FixturePeer.pauseMesh = false; jest.useRealTimers(); }
+  });
   it('sends one small playback delta, retaining chat without retransmitting it', async () => {
     const rooms = await pair();
     try {
@@ -104,10 +125,12 @@ describe('authenticated guest GDrive controls', () => {
       const start = direct?.sent.length ?? 0, aliasStart = alias?.sent.length ?? 0;
       await rooms.host.updatePresentation({ ownerId: rooms.hostSession.identity, epoch: crypto.randomUUID(), title: 'Movie', playback: { time: 30, duration: 100, paused: false }, error: '' });
       await flush();
-      expect(direct?.sent.length).toBe(start + 1);
       expect(alias?.sent.length).toBe(aliasStart);
-      const result = await openRoomFrame(rooms.guestSession.chatKey, rooms.hostSession.id,
-        `${rooms.hostSession.identity}/${direct?.connectionId}`, rooms.guestSession.identity, direct?.sent.at(-1));
+      const emitted = await Promise.all((direct?.sent.slice(start) ?? []).map((payload) => openRoomFrame(rooms.guestSession.chatKey, rooms.hostSession.id,
+        `${rooms.hostSession.identity}/${direct?.connectionId}`, rooms.guestSession.identity, payload)));
+      const playbackFrames = emitted.filter((frame) => frame.body && typeof frame.body === 'object' && 'kind' in frame.body && frame.body.kind === 'playback');
+      expect(playbackFrames).toHaveLength(1);
+      const result = playbackFrames[0];
       expect(result.body).toMatchObject({ kind: 'playback' });
       expect(JSON.stringify(result.body)).not.toContain('messages');
       expect(Buffer.byteLength(JSON.stringify(direct?.sent.at(-1)))).toBeLessThan(2048);
@@ -115,8 +138,9 @@ describe('authenticated guest GDrive controls', () => {
       expect(rooms.states.at(-1)?.presentation?.playback?.time).toBe(30);
       const share = rooms.states.at(-1)?.presentation;
       if (!share) throw new Error('Missing presentation');
+      const sequence = rooms.states.at(-1)?.sequence;
       await rooms.host.updatePresentation(share); await flush();
-      expect(direct?.sent.length).toBe(start + 1);
+      expect(rooms.states.at(-1)?.sequence).toBe(sequence);
     } finally { rooms.close(); }
   });
   it('repairs a missed playback delta with a complete authoritative snapshot', async () => {

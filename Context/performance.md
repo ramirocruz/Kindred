@@ -5,7 +5,7 @@ Date 2026-10-13; original diagnosis inspected runtime ff2a75c. User confirms bot
 ## Implemented remediation
 
 - Authenticated playback-only deltas omit chat/history; sequence gaps request full authoritative snapshots instead of skipping missing chat/member changes. Hello negotiates support; older guests retain full-snapshot fallback.
-- Publish chooses authenticated identity channel, falling back to alias only when needed. Unchanged presentation polls publish nothing.
+- Publish chooses authenticated identity channel, falling back to alias only when needed. Unchanged presentation polls publish nothing; alias-only guests receive authenticated fallback heartbeats so paused playback cannot starve host liveness.
 - Validation/decryption stays ordered; bounded asynchronous Drive work no longer holds the receive queue. Twelve active controls maximum and existing five-per-second sender limit remain; extension source operations stay serialized. Late results check current epoch/closed state.
 - Playback deltas retain history references; inbox fingerprints skip identical full history. Encryption and admission checks remain intact.
 - Movie track requests motion-oriented width≤1280, height≤720, FPS≤30 before sending; unsupported constraints retain original capture with a non-sensitive warning. Audio untouched. Browser codec/congestion adaptation remains; no fixed bitrate, custom codec, extra relay or compressed video-file chunks.

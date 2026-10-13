@@ -213,7 +213,8 @@ export class BrowserRoom {
       return;
     }
     if (message.kind === 'ping') {
-      if (remoteId === this.state.hostId && message.term === this.state.term && message.authority) this.lastAuthoritySeen = Date.now();
+      const fromHost = remoteId === this.state.hostId || (channel === this.anchor && remoteId === this.roomAddress);
+      if (fromHost && message.term === this.state.term && message.authority) this.lastAuthoritySeen = Date.now();
       if (remoteId === this.state.hostId && message.term === this.state.term && !this.authority && !this.anchor?.connection.open) this.discover();
       return;
     }
@@ -364,6 +365,18 @@ export class BrowserRoom {
     if (this.peer.disconnected && !this.peer.destroyed) { this.peer.reconnect(); return; }
     if (!this.peer.open) return;
     this.broadcast({ kind: 'ping', term: this.state?.term ?? 0, authority: this.authority });
+    const directHost = this.state && this.channels.get(this.state.hostId);
+    if (!this.authority && this.anchor?.authenticated && (!directHost?.authenticated || !directHost.connection.open)) {
+      void this.sendFrame(this.anchor, { kind: 'ping', term: this.state?.term ?? 0, authority: false });
+    }
+    if (this.authority && this.state) {
+      for (const channel of this.aliasChannels.values()) {
+        const direct = this.channels.get(channel.connection.peer);
+        if (channel.authenticated && (!direct?.authenticated || !direct.connection.open)) {
+          void this.sendFrame(channel, { kind: 'ping', term: this.state.term, authority: true });
+        }
+      }
+    }
     this.connectMembers();
     if (!this.state) {
       if (Date.now() - this.startedAt > TIMEOUT) this.observer.onStatus('Room unavailable. Check the full invite and keep a member online.');
