@@ -663,6 +663,14 @@ i {
 }
 
 .watch-room:fullscreen .reactions { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); }
+.drive-stage { padding: 0; background: #000; position: relative; }
+.drive-stage video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.drive-connecting { position: absolute; inset: 0; display: grid; place-items: center; }
+.drive-controls { flex-wrap: wrap; }
+.drive-timeline { flex: 1 0 100%; display: flex; align-items: center; gap: 12px; }
+.drive-timeline input { flex: 1; min-width: 0; accent-color: #d6ff61; }
+.drive-timeline span { font-size: 12px; white-space: nowrap; }
+.watch-room:fullscreen .drive-stage { height: 100%; min-height: 0; }
 .watch-room:fullscreen .chat { right: 6px; width: clamp(180px, 19vw, 300px); }
 @media (hover: none), (pointer: coarse) {
   .call-controls, .watch-room:fullscreen .player-controls { opacity: 1; }

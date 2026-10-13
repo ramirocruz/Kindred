@@ -7,6 +7,7 @@
     "apps/web"
   ],
   "scripts": {
+    "package:extension": "node scripts/package-extension.mjs",
     "signaling": "node scripts/peer-server.mjs",
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspace=@kindred/web",

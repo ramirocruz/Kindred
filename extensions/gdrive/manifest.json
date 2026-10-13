@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Kindred GDrive",
+  "version": "0.9.0",
+  "minimum_chrome_version": "116",
+  "description": "Share a Drive video with Kindred. Everyone can play, pause and seek.",
+  "permissions": ["activeTab", "tabCapture", "scripting", "storage", "webNavigation"],
+  "host_permissions": ["http://localhost:5173/*", "http://127.0.0.1:5173/*", "https://kindred.cheekyscout32.chatgpt.site/*", "https://drive.google.com/*", "https://docs.google.com/*", "https://*.googleusercontent.com/*", "https://youtube.googleapis.com/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "Share this Drive tab with Kindred", "default_popup": "popup.html" },
+  "content_scripts": [{ "matches": ["http://localhost:5173/*", "http://127.0.0.1:5173/*", "https://kindred.cheekyscout32.chatgpt.site/*"], "js": ["kindred-bridge.js"], "run_at": "document_idle" }]
+}

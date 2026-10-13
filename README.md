@@ -52,6 +52,20 @@ This shared invitation-key design has no forward secrecy, automatic key rotation
 
 Rooms currently allow 16 members and retain the latest 100 encrypted messages in browser memory. Chat is capped at 10,000 accepted messages per coordinator. Clear hides messages only for you. A message that cannot be decrypted appears as unavailable.
 
+## Google Drive playback
+
+1. Create/join a room in Chrome at port 5173. Select **GDrive**, then **Set up GDrive sharing** and **Download extension**.
+2. Unzip it. Open `chrome://extensions`, enable **Developer mode**, and select **Load unpacked** with the unzipped folder. Refresh Kindred.
+3. Open and start your Drive video. Click **Kindred GDrive**, choose the room, then **Share GDrive tab**.
+4. Return to Kindred and click its speaker button to hear the movie. Everyone can play/pause, seek with the timeline or ±10 seconds, and enter fullscreen. Guests need no extension.
+5. Stop/unlink in the room's linked-tab dialog or extension popup. Only the presenter can revoke the tab.
+
+The original Drive tab becomes silent during capture; movie audio is rendered once in Kindred. The capture stream is independent of camera/mic calls. GDrive uses no debugger. Browser capture indicators remain browser-owned.
+
+This migration follows the legacy accessible-video/frame discovery and pinned-document playback commands. Unsupported/protected players fail explicitly. Actual authenticated Drive capture and remote audiovisual delivery still need manual verification; unit tests are not proof of these.
+
+Extension source: `extensions/gdrive/`. You can also load that folder directly. Run `npm run package:extension` after editing it to refresh the download. Localhost and 127.0.0.1 on port 5173 are allowed; other origins need explicit extension allowlist changes. The v0.9.0 GDrive build is for new React rooms, not legacy invitations.
+
 ## Connection settings
 
 Defaults match the legacy PeerJS configuration. To use self-hosted infrastructure, copy the example:
@@ -82,7 +96,7 @@ The production website is generated in `apps/web/dist/`. `npm run lint` currentl
 
 The original landing page, source segments, compact dialogs, translucent chat/reactions, adjustable divider, fullscreen layout and participant cards remain. Encrypted room chat, shared reactions and host succession now use WebRTC.
 
-Movie-source playback, personal-file delivery, captured-tab streaming and extension pairing are still being migrated; their source submission/player actions remain disabled. The bundled extension download is the legacy v0.8.0 build. Do not switch production until feature parity and real two-device checks pass.
+GDrive capture/playback integration is implemented with a new v0.9.0 extension and requires real Drive/two-device verification. YouTube/web-video/personal-file delivery and interactive screen-sharing pairing remain pending; their submission/player actions remain disabled. Interactive setup still downloads the legacy v0.8.0 build, not a working React integration. Do not switch production until feature parity and real two-device checks pass.
 
 The former room-service source and LiveKit dependencies are removed; previous versions are recoverable in Git. Ignored local environment/build files from earlier development may still exist and are unused.
 

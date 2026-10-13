@@ -11,6 +11,7 @@ import { ExtensionSetup } from "./ExtensionSetup";
 import { RoomChat } from "./RoomChat";
 import { SourceSetup } from "./SourceSetup";
 import { MediaCall } from './MediaCall';
+import { GDriveControls, GDriveVideo } from './GDrivePlayer';
 import type { CSSProperties } from "react";
 
 const sourceCopy: Record<
@@ -64,8 +65,13 @@ export function WatchRoom({
   const [finishedReaction, setFinishedReaction] = useState<number | null>(null);
   const reaction = connection.reaction?.id === finishedReaction ? null : connection.reaction;
   const [notice, setNotice] = useState("");
+  const [muted, setMuted] = useState(true);
+  const video = useRef<HTMLVideoElement>(null);
+  const presenting = connection.presentation?.ownerId === room.identity;
   const stage = useRef<HTMLDivElement>(null);
   const copy = source ? sourceCopy[source] : null;
+  const reactionOverlay = reactions && reaction ? <span key={reaction.id} className="reaction-pop" role="status"
+    aria-label={`Reaction ${reaction.emoji}`} onAnimationEnd={() => setFinishedReaction(reaction.id)}>{reaction.emoji}</span> : null;
   async function toggleFullscreen(): Promise<void> {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
@@ -89,7 +95,7 @@ export function WatchRoom({
             className="secondary-button"
             onClick={() => setModal("setup")}
           >
-            Set up tab sharing
+            {connection.presentation ? `Tab linked: ${connection.presentation.title}` : 'Set up tab sharing'}
           </button>
           <button
             className="secondary-button"
@@ -113,16 +119,16 @@ export function WatchRoom({
               <button
                 key={item}
                 className={
-                  source === item ? "primary-button" : "secondary-button"
+                  (connection.presentation ? item === 'GDrive' : source === item) ? "primary-button" : "secondary-button"
                 }
-                aria-pressed={source === item}
+                aria-pressed={connection.presentation ? item === 'GDrive' : source === item}
                 onClick={() => setSource(item)}
               >
                 {item}
               </button>
             ))}
           </nav>
-          <div className="welcome-screen">
+          {connection.presentation ? <GDriveVideo stream={connection.screen} videoRef={video} onError={setNotice}>{reactionOverlay}</GDriveVideo> : <div className="welcome-screen">
             <p className="eyebrow">{source || "Room is ready"}</p>
             <h1>{copy?.title || "Welcome to Kindred"}</h1>
             <p>
@@ -164,19 +170,17 @@ export function WatchRoom({
                 <span className="round lime">▶</span>
               </div>
             )}
-            {reactions && reaction && (
-              <span
-                key={reaction.id}
-                className="reaction-pop"
-                role="status"
-                aria-label={`Reaction ${reaction.emoji}`}
-                onAnimationEnd={() => setFinishedReaction(reaction.id)}
-              >
-                {reaction.emoji}
-              </span>
-            )}
-          </div>
-          <div className="player-controls">
+            {reactionOverlay}
+          </div>}
+          <div className={`player-controls ${connection.presentation ? 'drive-controls' : ''}`}>
+            {connection.presentation ? <GDriveControls connection={connection} muted={muted} onError={setNotice}
+              onFullscreen={() => void toggleFullscreen()} onMute={() => {
+                if (video.current) {
+                  video.current.muted = !muted;
+                  void video.current.play().catch(() => setNotice('Tab audio could not start. Try again.'));
+                }
+                setMuted(!muted);
+              }} /> : <>
             <div className="control-buttons">
               <button className="round lime" aria-label="Play" disabled>
                 ▶
@@ -207,6 +211,7 @@ export function WatchRoom({
               <span className="control-status">Choose a video</span>
             </div>
             <span className="badge">Everyone can control</span>
+            </>}
           </div>
           {reactions && (
             <div className="reactions" aria-label="Reactions">
@@ -275,11 +280,16 @@ export function WatchRoom({
             {connection.status} · private invitation room.
           </p>
           <p className="sidebar-note">Host: {connection.members.find((member) => member.id === connection.hostId)?.displayName ?? 'Connecting…'}</p>
+          {connection.presentation && <p className="sidebar-note">Shared Drive tab · everyone can control playback.
+            {presenting && <button className="small" onClick={() => void connection.stopDrive()}>Stop sharing / unlink</button>}
+          </p>}
+          {connection.driveError && <p className="sidebar-note" role="status">{connection.driveError}</p>}
           <RoomChat connection={connection} />
         </aside>
       </div>
       {notice && <p role="status">{notice}</p>}
-      {modal === 'setup' && <ExtensionSetup gdrive={source === 'GDrive'} onClose={() => setModal(null)} />}
+      {modal === 'setup' && <ExtensionSetup gdrive={Boolean(connection.presentation) || source === 'GDrive'}
+        onUnlink={presenting ? () => { void connection.stopDrive(); setModal(null); } : undefined} onClose={() => setModal(null)} />}
       {modal === 'source' && source && <SourceSetup source={source} onClose={() => setModal(null)} />}
       {modal && modal !== 'setup' && modal !== 'source' && (
         <Dialog

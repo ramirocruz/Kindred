@@ -5,6 +5,9 @@ import { admitMember, browserRoomSchema, chatWireSchema, eldestSuccessor, isNewe
   type BrowserRoomState, type ChatWireMessage } from './browser-room-state';
 import { openRoomFrame, sealRoomFrame } from './room-frame';
 import { PeerMedia } from './peer-media';
+import { PeerScreen } from './peer-screen';
+import { canUpdatePresentation, driveActionSchema, playbackSchema, presentationSchema,
+  type DriveAction, type PlaybackState, type Presentation } from './gdrive-protocol';
 
 const TIMEOUT = 7000;
 const messageSchema = z.discriminatedUnion('kind', [
@@ -12,7 +15,10 @@ const messageSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('snapshot'), state: browserRoomSchema }),
   z.object({ kind: z.literal('ping'), term: z.number().int().nonnegative(), authority: z.boolean() }),
   z.object({ kind: z.literal('chat'), message: chatWireSchema }),
-  z.object({ kind: z.literal('ack'), id: z.string().uuid() }),
+  z.object({ kind: z.literal('ack'), id: z.string().uuid(), error: z.string().max(250).optional() }),
+  z.object({ kind: z.literal('presentation'), id: z.string().uuid(), presentation: presentationSchema.nullable() }),
+  z.object({ kind: z.literal('drive-control'), id: z.string().uuid(), epoch: z.string().uuid(), command: driveActionSchema }),
+  z.object({ kind: z.literal('drive-result'), id: z.string().uuid(), epoch: z.string().uuid(), state: playbackSchema.optional(), error: z.string().max(250).optional() }),
   z.object({ kind: z.literal('leave') }),
   z.object({ kind: z.literal('reaction'), emoji: z.enum(['😂', '❤️', '😱', '👏', '🍿']) }),
   z.object({ kind: z.literal('media'), enabled: z.boolean() }),
@@ -31,6 +37,8 @@ export interface RoomObserver {
   onStatus: (status: string) => void;
   onReaction: (emoji: string) => void;
   onStreams: (streams: ReadonlyMap<string, MediaStream>) => void;
+  onScreen: (stream: MediaStream | null) => void;
+  onDriveControl: (command: DriveAction) => Promise<PlaybackState>;
 }
 
 /** PeerServer owns connection IDs only; application authority lives in browsers. */
@@ -51,10 +59,15 @@ export class BrowserRoom {
   private seenChat = new Set<string>();
   private pending = new Map<string, { resolve: () => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   private media: PeerMedia;
+  private screen: PeerScreen;
+  private drivePending = new Map<string, { owner: string; epoch: string; resolve: (state: PlaybackState) => void;
+    reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
+  private driveLimits = new Map<string, { time: number; count: number }>();
 
   constructor(private readonly session: RoomSession, private readonly options: PeerOptions, private readonly observer: RoomObserver) {
     this.peer = new Peer(session.identity, options);
     this.media = new PeerMedia(this.peer, (id) => Boolean(this.channels.get(id)?.authenticated), observer.onStreams);
+    this.screen = new PeerScreen(this.peer, session.identity, (id) => Boolean(this.channels.get(id)?.authenticated), observer.onScreen);
     this.peer.on('open', () => {
       if (session.creator && !this.state) {
         this.state = { id: session.id, name: session.name, reactions: session.reactions, hostId: session.identity,
@@ -63,7 +76,10 @@ export class BrowserRoom {
       } else this.discover();
     });
     this.peer.on('connection', (connection) => this.attach(connection, session.identity, false));
-    this.peer.on('call', (call) => this.media.receive(call));
+    this.peer.on('call', (call) => {
+      if (call.metadata?.kind === 'gdrive') this.screen.receive(call);
+      else this.media.receive(call);
+    });
     this.peer.on('error', (error) => {
       if (error.type !== 'peer-unavailable') this.observer.onStatus('Connection unavailable. Check signaling settings.');
     });
@@ -110,6 +126,7 @@ export class BrowserRoom {
         this.channels.delete(connection.peer);
         this.lastSeen.delete(connection.peer);
         this.media.remove(connection.peer);
+        this.screen.remove(connection.peer);
         if (this.authority) this.removeMember(connection.peer);
       }
     };
@@ -152,6 +169,7 @@ export class BrowserRoom {
       if (this.state && !isNewerSnapshot(this.state, incoming)) return;
       if (fromAnchor) { channel.authenticated = true; this.release(); }
       this.state = incoming;
+      this.screen.setPresentation(incoming.presentation);
       incoming.messages.forEach((item) => this.seenChat.add(item.id));
       this.lastSeen.set(incoming.hostId, Date.now());
       this.lastAuthoritySeen = Date.now();
@@ -176,7 +194,39 @@ export class BrowserRoom {
     }
     if (message.kind === 'ack' && remoteId === this.state.hostId) {
       const pending = this.pending.get(message.id);
-      if (pending) { clearTimeout(pending.timer); this.pending.delete(message.id); pending.resolve(); }
+      if (pending) { clearTimeout(pending.timer); this.pending.delete(message.id); message.error ? pending.reject(new Error(message.error)) : pending.resolve(); }
+    }
+    if (message.kind === 'presentation' && this.authority) {
+      try {
+        this.commitPresentation(message.presentation, remoteId);
+        await this.sendFrame(channel, { kind: 'ack', id: message.id });
+      } catch (error) {
+        await this.sendFrame(channel, { kind: 'ack', id: message.id, error: error instanceof Error ? error.message : 'Sharing failed.' });
+      }
+    }
+    if (message.kind === 'drive-control') {
+      const share = this.state.presentation;
+      if (!share || share.ownerId !== this.session.identity || share.epoch !== message.epoch) return;
+      const previous = this.driveLimits.get(remoteId);
+      const limit = previous && Date.now() - previous.time < 1000 ? previous : { time: Date.now(), count: 0 };
+      this.driveLimits.set(remoteId, limit); limit.count++;
+      try {
+        if (limit.count > 5) throw new Error('Too many playback requests. Try again shortly.');
+        const state = await this.observer.onDriveControl(message.command);
+        if (this.state.presentation?.epoch !== message.epoch) throw new Error('The shared tab changed.');
+        await this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch, state });
+      } catch (error) {
+        await this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch,
+          error: error instanceof Error ? error.message.slice(0, 250) : 'Playback failed.' });
+      }
+    }
+    if (message.kind === 'drive-result') {
+      const pending = this.drivePending.get(message.id);
+      if (pending && pending.owner === remoteId && pending.epoch === message.epoch) {
+        clearTimeout(pending.timer); this.drivePending.delete(message.id);
+        if (message.state && this.state.presentation?.epoch === message.epoch) pending.resolve(message.state);
+        else pending.reject(new Error(message.error || 'The shared tab changed.'));
+      }
     }
     if (message.kind === 'reaction' && this.state.reactions) {
       this.observer.onReaction(message.emoji);
@@ -198,6 +248,7 @@ export class BrowserRoom {
       if (!this.state.members.some((member) => member.id === id)) channel.connection.close();
       else if (!channel.authenticated && channel.connection.open) void this.sendFrame(channel, { kind: 'hello', displayName: this.session.displayName });
     }
+    this.screen.sync(this.channels.keys());
   }
 
   private broadcast(message: Message, except?: string): void {
@@ -207,6 +258,7 @@ export class BrowserRoom {
   private publish(): void {
     if (!this.state || !this.authority) return;
     this.lastAuthoritySeen = Date.now();
+    this.screen.setPresentation(this.state.presentation);
     this.observer.onState(this.state);
     this.observer.onStatus('Connected');
     this.broadcast({ kind: 'snapshot', state: this.state });
@@ -285,8 +337,50 @@ export class BrowserRoom {
 
   private removeMember(id: string): void {
     if (!this.state || id === this.state.hostId || !this.state.members.some((member) => member.id === id)) return;
-    this.state = { ...this.state, sequence: this.state.sequence + 1, members: this.state.members.filter((member) => member.id !== id) };
-    this.media.remove(id); this.publish();
+    const { presentation, ...rest } = this.state;
+    this.state = { ...rest, ...(presentation && presentation.ownerId !== id ? { presentation } : {}),
+      sequence: rest.sequence + 1, members: rest.members.filter((member) => member.id !== id) };
+    this.media.remove(id); this.screen.remove(id); this.driveLimits.delete(id); this.publish();
+  }
+
+  private commitPresentation(next: Presentation | null, sender: string): void {
+    if (!this.authority || !this.state || !this.state.members.some((member) => member.id === sender)) throw new Error('Wait for a room host.');
+    if (!canUpdatePresentation(this.state.presentation, next, sender)) throw new Error('Stop the current presentation before sharing another tab.');
+    const { presentation: previous, ...rest } = this.state;
+    void previous;
+    this.state = { ...rest, ...(next ? { presentation: next } : {}), sequence: rest.sequence + 1 };
+    this.publish();
+  }
+
+  public async updatePresentation(presentation: Presentation | null): Promise<void> {
+    if (this.authority) { this.commitPresentation(presentation, this.session.identity); return; }
+    const host = this.state && this.channels.get(this.state.hostId);
+    if (!host?.authenticated || !host.connection.open) throw new Error('Wait for the host connection.');
+    if (this.pending.size >= 12) throw new Error('Please wait for pending room requests.');
+    const id = crypto.randomUUID();
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('Sharing was not confirmed.')); }, TIMEOUT);
+      this.pending.set(id, { resolve, reject, timer });
+      void this.sendFrame(host, { kind: 'presentation', id, presentation });
+    });
+  }
+
+  public setScreen(stream: MediaStream | null): void { this.screen.setStream(stream); this.screen.sync(this.channels.keys()); }
+
+  public async controlDrive(command: DriveAction): Promise<PlaybackState> {
+    const parsed = driveActionSchema.parse(command);
+    const share = this.state?.presentation;
+    if (!share) throw new Error('No Drive tab is shared.');
+    if (share.ownerId === this.session.identity) return this.observer.onDriveControl(parsed);
+    const channel = this.channels.get(share.ownerId);
+    if (!channel?.authenticated || !channel.connection.open) throw new Error('The presenter is disconnected.');
+    if (this.drivePending.size >= 12) throw new Error('Please wait for pending playback requests.');
+    const id = crypto.randomUUID();
+    return new Promise<PlaybackState>((resolve, reject) => {
+      const timer = setTimeout(() => { this.drivePending.delete(id); reject(new Error('The presenter did not acknowledge playback.')); }, 10000);
+      this.drivePending.set(id, { owner: share.ownerId, epoch: share.epoch, resolve, reject, timer });
+      void this.sendFrame(channel, { kind: 'drive-control', id, epoch: share.epoch, command: parsed });
+    });
   }
 
   private commitChat(message: ChatWireMessage): void {
@@ -330,6 +424,8 @@ export class BrowserRoom {
     clearInterval(this.interval);
     for (const request of this.pending.values()) { clearTimeout(request.timer); request.reject(new Error('Room left.')); }
     this.pending.clear(); this.release(); this.peer.destroy();
+    for (const request of this.drivePending.values()) { clearTimeout(request.timer); request.reject(new Error('Room left.')); }
+    this.drivePending.clear(); this.driveLimits.clear(); this.screen.close();
     this.media.close(); this.channels.clear(); this.seenChat.clear();
   }
 }
