@@ -1,6 +1,5 @@
 .DS_Store
 .idea/
-Context/
 node_modules/
 coverage/
 apps/*/dist/

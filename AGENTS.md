@@ -9,10 +9,10 @@ See [README.md](README.md) for setup, commands, and current limitations.
 ## Before Pushing
 
 - Run `npm run typecheck`, `npm test`, `npm run build`, and `git diff --check`.
-- Commit coherent, scoped changes as progress is made. Never stage secrets, generated output, IDE files, or ignored Context notes.
+- Commit coherent, scoped changes as progress is made. Include relevant sanitized Context updates. Never stage secrets, generated build output or IDE files.
 - Update `README.md` whenever setup, commands, dependencies, user-visible capabilities, or significant limitations change.
 - Current `lint` scripts run TypeScript checks, not ESLint.
-- User-approved architecture HTML under `docs/architecture/` is a deployable documentation asset, exempt from the generated-build-output exclusion. Keep its validated source candidate and provenance reference; never publish local Context or validation receipts.
+- User-approved architecture HTML under `docs/architecture/` is a deployable documentation asset, exempt from the generated-build-output exclusion. Keep its validated source candidate and provenance reference; exclude Context and validation receipts from the Pages artifact. Context is public repository documentation, not private storage.
 
 ## Testing
 
@@ -32,14 +32,24 @@ See [README.md](README.md) for setup, commands, and current limitations.
 
 ## Context is mandatory
 
-Before every task, read `Context/README.md`, `Context/index.md`, and the documents relevant to the change. After every material change, update the relevant Context documents in the same task:
+Before every task, read `Context/README.md`, `Context/index.md`, `Context/current.md`, and only the topic documents relevant to the change. After every material change, update the relevant Context documents in the same task:
 
-- `progress.md`: completed work, evidence, and next work.
+- `current.md`: current capabilities, boundaries and next priorities.
+- `progress.md`: recent completed milestones with commit references.
 - `decisions.md`: architecture or product decisions and trade-offs.
 - `testing.md`: commands run, results, and verification limits.
-- `rollout.md`: environments, credentials, deployment gates, and blockers.
+- `rollout.md`: public environments, deployment gates and blockers; never credentials.
 
-`Context/` is intentionally ignored and must never be staged. Mark claims as **Verified**, **Implemented**, or **Hypothesis**. Do not present builds, fixtures, or syntax checks as proof of real multi-device media behavior.
+`Context/` is tracked by explicit user approval. Mark claims as **Verified**, **Implemented**, or **Hypothesis**. Do not present builds, fixtures, or syntax checks as proof of real multi-device media behavior. Do not store invitation keys, tokens, signed media URLs, private accounts, local absolute paths, raw transcripts, screenshots or machine validation receipts here.
+
+### Context compaction
+
+- Update facts in place; do not append the same milestone to several files. Keep decisions, evidence and deployment ownership separate, and link instead of repeating.
+- On every Markdown update, skim related older notes and search for conflicting claims. Remove or correct stale active statements, fix their links, and retain useful superseded rationale only as an explicitly historical archive summary. Never leave two contradictory current instructions.
+- Keep `current.md` within 80 lines, `index.md` within 60 lines and each active topic within 120 lines. Keep only the latest 10 milestones in `progress.md`.
+- Compact at milestones, when a budget is exceeded, or when a decision is superseded. Move a concise historical summary into `Context/archive/` with dates, source/commit references, rationale and evidence limits. Preserve unresolved questions and useful diagnostic lessons.
+- Read archive files only for historical questions; archive statements never override current code or direct user instructions. Verify source before treating old evidence as current behavior.
+- Check links, privacy and stale statements before staging Context. Record the compaction date and evidence revision. Git history preserves later revisions; keep any initial untracked backup outside the repository.
 
 ## Established Patterns
 
@@ -49,7 +59,7 @@ Before every task, read `Context/README.md`, `Context/index.md`, and the documen
 - Styling: Tailwind CSS.
 - Room coordination: creator browser initially; eldest reachable admitted member succeeds after acquiring the stable PeerServer rendezvous address. A returning former host joins as an ordinary member at the end of the admission order.
 - Camera, microphone, and screen media: PeerJS/WebRTC. User-approved legacy public signaling/ICE defaults are current; explicit self-hosted configuration remains optional. TODO: revisit hosting/privacy once decided.
-- Personal-file transport: WebTorrent, isolated from room coordination.
+- Intended personal-file transport: WebTorrent, isolated from room coordination; React delivery remains pending.
 - Keep credentials in environment variables; never commit them.
 - Authenticate browser admission/control frames with the invitation capability before accepting room state or media. Peer IDs alone are not authorization. Do not reintroduce room-service APIs/tickets or database authority without a new user decision.
 

@@ -33,7 +33,7 @@ The migration app deploys separately from the legacy ChatGPT-hosted site:
 
 In GitHub, open **Settings → Pages → Source** and choose **GitHub Actions** once. Pushes to `main` run typecheck/tests, package the GDrive extension, build the app and publish both pages. You can also run **Deploy Kindred to Pages** manually from **Actions**. Links are deployment targets; check the workflow for actual deployment success.
 
-`npm run build:pages` produces the Pages artifact in `apps/web/dist/`, including architecture and extension downloads. Normal `npm run dev` stays at `/`; Pages uses `/Kindred/`. Context, environment files and validation receipts are never published. Reinstall/reload Kindred GDrive v0.9.2 and refresh room tabs after updating.
+`npm run build:pages` produces the Pages artifact in `apps/web/dist/`, including architecture and extension downloads. Normal `npm run dev` stays at `/`; Pages uses `/Kindred/`. Context, environment files and validation receipts are excluded from the website artifact. Sanitized Context notes are public in the repository. Reinstall/reload Kindred GDrive v0.9.2 and refresh room tabs after updating.
 
 ## Room hosts and leaving
 
@@ -119,7 +119,7 @@ The former room-service source and LiveKit dependencies are removed; previous ve
 - `apps/web/src/features/room/`: interface and browser room/media logic.
 - `scripts/peer-server.mjs`: local signaling launcher.
 - [AGENTS.md](AGENTS.md): development rules.
-- `Context/index.md`: ignored local project notes; unavailable in fresh clones.
+- [Context/index.md](Context/index.md): tracked project memory and task routing. Start with [Context/current.md](Context/current.md); older decisions live in `Context/archive/`. Notes are sanitized for the public repository and excluded from the Pages website.
 - [High-level design](docs/architecture.md): current browser authority, PeerJS and GDrive paths.
 - [Architecture guide and diagrams](https://ramirocruz.github.io/Kindred/architecture/): detailed HLD/LLD, component contracts, request flows, message models and security/verification limits. Versioned HTML lives in `docs/architecture/`; Archify source candidates remain under `.archify/`.
 
