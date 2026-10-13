@@ -23,6 +23,7 @@ export class EncryptedChatInbox {
   private queue: Promise<void> = Promise.resolve();
   private messages: ChatMessage[] = [];
   private active = true;
+  private historyFingerprint: string | null = null;
 
   constructor(private readonly options: InboxOptions) {}
 
@@ -32,11 +33,14 @@ export class EncryptedChatInbox {
       const incoming = kind === 'history'
         ? z.array(wireMessageSchema).max(100).parse(payload)
         : [wireMessageSchema.parse(payload)];
+      const fingerprint = kind === 'history' ? JSON.stringify(incoming) : null;
+      if (fingerprint !== null && fingerprint === this.historyFingerprint) return;
       const decrypted = await Promise.all(incoming.map((message) => this.decode(message)));
       if (!this.active) return;
       const byId = new Map((kind === 'history' ? [] : this.messages).map((message) => [message.id, message]));
       decrypted.forEach((message) => byId.set(message.id, message));
       this.messages = [...byId.values()].slice(-100);
+      this.historyFingerprint = fingerprint;
       this.options.onMessages(this.messages);
     }).catch(() => { if (this.active) this.options.onError(); });
     return this.queue;
@@ -45,6 +49,7 @@ export class EncryptedChatInbox {
   public dispose(): void {
     this.active = false;
     this.messages = [];
+    this.historyFingerprint = null;
   }
 
   private async decode(message: WireMessage): Promise<ChatMessage> {

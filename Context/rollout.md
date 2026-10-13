@@ -13,6 +13,7 @@ Never commit .env values or TURN shared secrets; only placeholders in .env.examp
 - App: https://ramirocruz.github.io/Kindred/
 - Architecture: https://ramirocruz.github.io/Kindred/architecture/
 - Latest verified deployment: ff2a75c, Actions 38386807562, success.
+- Performance remediation passes local 72 tests/typecheck/Pages build; publication pending. Refresh both participants and stop/re-share capture after deployment. Extension v0.9.2 unchanged; older app peers retain full-snapshot fallback and miss some optimizations.
 - GitHub Pages source: GitHub Actions. SHA-pinned official actions run npm ci/typecheck/Jest/extension packaging/Pages build before deploy.
 - Pages base `/Kindred/`; normal dev base `/`. Keep extension origin/path allowlists aligned.
 - Packaging copies compiled app, downloads and four approved architecture HTML files. Context, .env and validation receipts excluded.

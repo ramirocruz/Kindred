@@ -11,8 +11,12 @@ import { canUpdatePresentation, driveActionSchema, playbackSchema, presentationS
 
 const TIMEOUT = 7000;
 const messageSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('hello'), displayName: z.string().trim().min(1).max(24) }),
+  z.object({ kind: z.literal('hello'), displayName: z.string().trim().min(1).max(24), playbackDeltas: z.boolean().optional() }),
   z.object({ kind: z.literal('snapshot'), state: browserRoomSchema }),
+  z.object({ kind: z.literal('state-request') }),
+  z.object({ kind: z.literal('playback'), roomId: z.string().uuid(), hostId: z.string().uuid(),
+    term: z.number().int().positive(), previousSequence: z.number().int().nonnegative(), sequence: z.number().int().positive(),
+    presentation: presentationSchema.nullable() }),
   z.object({ kind: z.literal('ping'), term: z.number().int().nonnegative(), authority: z.boolean() }),
   z.object({ kind: z.literal('chat'), message: chatWireSchema }),
   z.object({ kind: z.literal('ack'), id: z.string().uuid(), error: z.string().max(250).optional() }),
@@ -28,9 +32,11 @@ interface Channel {
   connection: DataConnection;
   localId: string;
   authenticated: boolean;
+  playbackDeltas: boolean;
   received: Set<string>;
   incoming: Promise<void>;
   outgoing: Promise<void>;
+  syncRequestedAt?: number;
 }
 export interface RoomObserver {
   onState: (state: BrowserRoomState) => void;
@@ -63,6 +69,7 @@ export class BrowserRoom {
   private drivePending = new Map<string, { owner: string; epoch: string; resolve: (state: PlaybackState) => void;
     reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   private driveLimits = new Map<string, { time: number; count: number }>();
+  private activeDriveControls = 0;
 
   constructor(private readonly session: RoomSession, private readonly options: PeerOptions, private readonly observer: RoomObserver) {
     this.peer = new Peer(session.identity, options);
@@ -94,7 +101,7 @@ export class BrowserRoom {
   private get authority(): boolean { return Boolean(this.alias?.open && !this.alias.disconnected && !this.alias.destroyed && this.state?.hostId === this.session.identity); }
 
   private attach(connection: DataConnection, localId: string, anchor: boolean): Channel {
-    const channel: Channel = { connection, localId, authenticated: false, received: new Set(), incoming: Promise.resolve(), outgoing: Promise.resolve() };
+    const channel: Channel = { connection, localId, authenticated: false, playbackDeltas: false, received: new Set(), incoming: Promise.resolve(), outgoing: Promise.resolve() };
     if (anchor) this.anchor = channel;
     else if (localId === this.session.identity) {
       const existing = this.channels.get(connection.peer);
@@ -105,7 +112,7 @@ export class BrowserRoom {
       this.channels.set(connection.peer, channel);
     } else this.aliasChannels.set(connection, channel);
     const expiry = setTimeout(() => { if (!channel.authenticated) connection.close(); }, TIMEOUT);
-    connection.on('open', () => { void this.sendFrame(channel, { kind: 'hello', displayName: this.session.displayName }); });
+    connection.on('open', () => { void this.sendFrame(channel, { kind: 'hello', displayName: this.session.displayName, playbackDeltas: true }); });
     connection.on('data', (payload: unknown) => {
       channel.incoming = channel.incoming.then(async () => {
         if (this.closed || !connection.open) return;
@@ -148,6 +155,7 @@ export class BrowserRoom {
   private async receive(channel: Channel, message: Message): Promise<void> {
     const remoteId = channel.connection.peer;
     if (message.kind === 'hello') {
+      channel.playbackDeltas = message.playbackDeltas === true;
       if (channel.localId === this.roomAddress && this.authority && this.state) {
         this.state = admitMember(this.state, remoteId, message.displayName);
         channel.authenticated = true;
@@ -180,6 +188,30 @@ export class BrowserRoom {
     }
     if (!channel.authenticated || !this.state) return;
     this.lastSeen.set(remoteId, Date.now());
+    if (message.kind === 'state-request' && this.authority) {
+      if (Date.now() - (channel.syncRequestedAt ?? 0) < 1000) return;
+      channel.syncRequestedAt = Date.now();
+      void this.sendFrame(channel, { kind: 'snapshot', state: this.state });
+      return;
+    }
+    if (message.kind === 'playback') {
+      const trusted = remoteId === this.state.hostId || (channel === this.anchor && remoteId === this.roomAddress);
+      if (!trusted || message.roomId !== this.state.id || message.hostId !== this.state.hostId || message.term !== this.state.term) return;
+      if (message.sequence <= this.state.sequence) return;
+      // Never apply a delta across a missed membership/chat commit or a channel switch.
+      if (message.previousSequence !== this.state.sequence || message.sequence !== message.previousSequence + 1
+        || (message.presentation && !this.state.members.some((member) => member.id === message.presentation?.ownerId))) {
+        void this.sendFrame(channel, { kind: 'state-request' }); return;
+      }
+      const { presentation: previous, ...rest } = this.state;
+      void previous;
+      this.state = { ...rest, sequence: message.sequence, ...(message.presentation ? { presentation: message.presentation } : {}) };
+      this.lastAuthoritySeen = Date.now();
+      this.screen.setPresentation(this.state.presentation);
+      this.observer.onState(this.state);
+      this.observer.onStatus('Connected');
+      return;
+    }
     if (message.kind === 'ping') {
       if (remoteId === this.state.hostId && message.term === this.state.term && message.authority) this.lastAuthoritySeen = Date.now();
       if (remoteId === this.state.hostId && message.term === this.state.term && !this.authority && !this.anchor?.connection.open) this.discover();
@@ -210,15 +242,22 @@ export class BrowserRoom {
       const previous = this.driveLimits.get(remoteId);
       const limit = previous && Date.now() - previous.time < 1000 ? previous : { time: Date.now(), count: 0 };
       this.driveLimits.set(remoteId, limit); limit.count++;
-      try {
-        if (limit.count > 5) throw new Error('Too many playback requests. Try again shortly.');
-        const state = await this.observer.onDriveControl(message.command);
-        if (this.state.presentation?.epoch !== message.epoch) throw new Error('The shared tab changed.');
-        await this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch, state });
-      } catch (error) {
-        await this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch,
-          error: error instanceof Error ? error.message.slice(0, 250) : 'Playback failed.' });
+      if (limit.count > 5 || this.activeDriveControls >= 12) {
+        void this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch, error: 'Too many playback requests. Try again shortly.' });
+        return;
       }
+      this.activeDriveControls++;
+      // Keep authentication/decryption ordered, not slow source play/seek completion.
+      void (async () => {
+        try {
+          const state = await this.observer.onDriveControl(message.command);
+          if (this.closed || this.state?.presentation?.epoch !== message.epoch) throw new Error('The shared tab changed.');
+          await this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch, state });
+        } catch (error) {
+          await this.sendFrame(channel, { kind: 'drive-result', id: message.id, epoch: message.epoch,
+            error: error instanceof Error ? error.message.slice(0, 250) : 'Playback failed.' });
+        } finally { this.activeDriveControls--; }
+      })();
     }
     if (message.kind === 'drive-result') {
       const pending = this.drivePending.get(message.id);
@@ -246,7 +285,7 @@ export class BrowserRoom {
     }
     for (const [id, channel] of this.channels) {
       if (!this.state.members.some((member) => member.id === id)) channel.connection.close();
-      else if (!channel.authenticated && channel.connection.open) void this.sendFrame(channel, { kind: 'hello', displayName: this.session.displayName });
+      else if (!channel.authenticated && channel.connection.open) void this.sendFrame(channel, { kind: 'hello', displayName: this.session.displayName, playbackDeltas: true });
     }
     this.screen.sync(this.channels.keys());
   }
@@ -255,14 +294,24 @@ export class BrowserRoom {
     for (const [id, channel] of this.channels) if (channel.authenticated && id !== except) void this.sendFrame(channel, message);
   }
 
-  private publish(): void {
+  private publish(previousSequence?: number): void {
     if (!this.state || !this.authority) return;
     this.lastAuthoritySeen = Date.now();
     this.screen.setPresentation(this.state.presentation);
     this.observer.onState(this.state);
     this.observer.onStatus('Connected');
-    this.broadcast({ kind: 'snapshot', state: this.state });
-    for (const channel of this.aliasChannels.values()) if (channel.authenticated) void this.sendFrame(channel, { kind: 'snapshot', state: this.state });
+    const message: Message = previousSequence === undefined ? { kind: 'snapshot', state: this.state }
+      : { kind: 'playback', roomId: this.state.id, hostId: this.state.hostId, term: this.state.term,
+        previousSequence, sequence: this.state.sequence, presentation: this.state.presentation ?? null };
+    for (const channel of this.channels.values()) {
+      if (channel.authenticated) void this.sendFrame(channel, message.kind === 'playback' && !channel.playbackDeltas ? { kind: 'snapshot', state: this.state } : message);
+    }
+    for (const channel of this.aliasChannels.values()) {
+      const direct = this.channels.get(channel.connection.peer);
+      if (channel.authenticated && (!direct?.authenticated || !direct.connection.open)) {
+        void this.sendFrame(channel, message.kind === 'playback' && !channel.playbackDeltas ? { kind: 'snapshot', state: this.state } : message);
+      }
+    }
     this.connectMembers();
   }
 
@@ -346,10 +395,11 @@ export class BrowserRoom {
   private commitPresentation(next: Presentation | null, sender: string): void {
     if (!this.authority || !this.state || !this.state.members.some((member) => member.id === sender)) throw new Error('Wait for a room host.');
     if (!canUpdatePresentation(this.state.presentation, next, sender)) throw new Error('Stop the current presentation before sharing another tab.');
+    if (JSON.stringify(this.state.presentation ?? null) === JSON.stringify(next)) return;
     const { presentation: previous, ...rest } = this.state;
     void previous;
     this.state = { ...rest, ...(next ? { presentation: next } : {}), sequence: rest.sequence + 1 };
-    this.publish();
+    this.publish(rest.sequence);
   }
 
   public async updatePresentation(presentation: Presentation | null): Promise<void> {

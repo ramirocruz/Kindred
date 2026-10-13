@@ -4,6 +4,7 @@ Updated 2026-10-13. Evidence applies to listed revisions, not every later change
 
 | Revision / area | Verified evidence | Limit |
 | --- | --- | --- |
+| Current performance remediation | 72 Jest cases/21 suites, typecheck/Pages build/diff checks; actual encrypted mesh deltas under 2KB, gap repair, old-client fallback, pending-seek dispatch, stale unlink, history suppression and capture profile/fallback; local guest chat/handover writes pass | No real authenticated Drive capture/settings or measured stutter improvement |
 | ff2a75c room labels | 62 Jest cases/20 suites, typecheck, extension packaging, Pages build, diff check; browser custom title/header and title reset on leave | Popup label helper tested, actual installed Chrome extension not tested |
 | ff2a75c deployment | Actions 38386807562 succeeds; hosted ZIP HTTP200 with v0.9.2 manifest and roomLabel popup | CI ZIP timestamps change digest; no byte-equality claim |
 | a21357a docs | 61 tests, source-aware Archify HLD/LLD automated gates, browser guide expansion/diagram render and live docs | Optional perceptual review not requested; no security/media certification |
@@ -21,7 +22,7 @@ Updated 2026-10-13. Evidence applies to listed revisions, not every later change
 
 Real two-device camera/mic and Drive audio/video; audible echo/noise/latency measurement; TURN-only/difficult networks; autoplay/device-denial/reconnect; host loss with independent presenter; background tabs/long sessions; dependency/security review and membership revocation.
 
-Latency diagnosis: native encryption synthetic snapshot-size benchmark and actual attach/receive replay with transport/decryption stubs confirm volume growth and queued pause/ping behind seek. Supplied member-side phone recording reviewed offline; uneven held/abruptly changing movie poses, no visible page reload in samples. Recording FPS is not stream FPS and source animation may hold poses. No live WebRTC/network measurements or audio-quality assessment. Detailed cases and limits: [performance](performance.md). No runtime fix implemented.
+Baseline latency diagnosis: native encryption snapshot-size benchmark and actual-handler replay confirmed volume growth/blocked dispatch at ff2a75c. Supplied recording reviewed offline, not actual RTC metrics. Remediation now implemented; tests cover small deltas, gap recovery, old clients, pending-seek dispatch, stale unlink results, unchanged history and capture fallback. Local public-PeerJS browser guest chat and sole-survivor handover/writes pass. No real Drive/network/quality assessment. Detailed cases and limits: [performance](performance.md).
 
 ## Context compaction
 

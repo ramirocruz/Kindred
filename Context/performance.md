@@ -1,12 +1,21 @@
 # GDrive latency diagnosis
 
-Date 2026-10-13; inspected runtime ff2a75c. Diagnosis only: no playback/media implementation changed. User confirms both browsers Chrome, GitHub Pages, guest video stuttering rather than merely delayed. Exact hardware, network, command latency and chat volume remain unknown.
+Date 2026-10-13; original diagnosis inspected runtime ff2a75c. User confirms both browsers Chrome, GitHub Pages, guest video stuttering rather than merely delayed. Exact hardware, network, command latency and chat volume remain unknown. The fixes below supersede the baseline implementation findings.
+
+## Implemented remediation
+
+- Authenticated playback-only deltas omit chat/history; sequence gaps request full authoritative snapshots instead of skipping missing chat/member changes. Hello negotiates support; older guests retain full-snapshot fallback.
+- Publish chooses authenticated identity channel, falling back to alias only when needed. Unchanged presentation polls publish nothing.
+- Validation/decryption stays ordered; bounded asynchronous Drive work no longer holds the receive queue. Twelve active controls maximum and existing five-per-second sender limit remain; extension source operations stay serialized. Late results check current epoch/closed state.
+- Playback deltas retain history references; inbox fingerprints skip identical full history. Encryption and admission checks remain intact.
+- Movie track requests motion-oriented width≤1280, height≤720, FPS≤30 before sending; unsupported constraints retain original capture with a non-sensitive warning. Audio untouched. Browser codec/congestion adaptation remains; no fixed bitrate, custom codec, extra relay or compressed video-file chunks.
+- Tested compact encrypted update under 2KB, missing-delta repair, old-client fallback, parallel dispatch during pending seek, stale unlink result, identical-history suppression and capture profile/fallback. Real-browser chat/handover regression verified. Actual Drive performance improvement and negotiated capture settings still require a two-device retest.
 
 ## Member recording reviewed
 
 Offline decoding of supplied 10.2-second phone recording succeeded. Container is H.264, 576×1024, ~29.9fps; these describe the recording, NOT delivered WebRTC FPS. Inspected sequential samples across the clip and 0.2-second samples of its last four seconds: movie poses persist then change abruptly, while camera movement continues and room chrome stays present. No visible whole-page reload in inspected samples. Anime intentionally holds poses, so missing/intermediate frames and freeze duration cannot be attributed conclusively without source-side comparison. This supports the reported uneven-motion symptom, not a network/CPU/codec diagnosis. Audio quality not assessed; no playback clicks evident in inspected samples to time control response. No raw recording, screenshots, invite fragments or personal desktop details committed.
 
-## Confirmed implementation differences
+## Historical baseline differences (ff2a75c; fixed above)
 
 - `GDriveBridge` polls state every 1.5 seconds, as legacy does. Each successful new update commits presentation and `BrowserRoom.publish` broadcasts a full snapshot, including up to 100 chat envelopes, through mesh and authenticated alias channels. A guest with both connections gets duplicate network payloads (second same-sequence snapshot is discarded after decryption).
 - Legacy `interactive-room.js` broadcasts compact `quiet-state` only for playback, not chat history.
@@ -30,9 +39,9 @@ Legacy comparable quiet-state JSON: 158 bytes. These are constructed cases, not 
 
 Executed actual new `attach`/`receive` methods with transport/decryption stubs and a deferred seek. While unresolved: only seek invoked, subsequent ping did not refresh authority, pause not dispatched. On resolving: ping/pause processed. This confirms application-level blocking, not actual Drive/network timing.
 
-## What comparison does NOT establish
+## Limits of the baseline comparison
 
-- Both GDrive paths use identical mandatory Chrome tab-source capture constraints and one `peer.call` per guest. Neither tunes movie track resolution/frame rate/contentHint/sender bitrate. Camera constraints do not govern movie capture.
+- Baseline GDrive paths used identical mandatory Chrome tab-source capture constraints and one `peer.call` per guest, without movie tuning. Current remediation adds the bounded motion capture profile above; camera constraints do not govern movie capture.
 - Legacy vendored PeerJS 1.5.4 and installed 1.5.5 list the same Google STUN and EU/US PeerJS TURN URLs; selected candidate pairs can still differ per call. Public defaults alone are not a proven migration cause.
 - Movie video is not encoded by the custom chat encryption helper; WebRTC carries it. Pages serves assets, not live media/control traffic.
 - `GDriveVideo` dependencies are stream, stable ref and stable setNotice callback. Ordinary presentation state rerenders do not prove recurring video srcObject resets; epoch/owner changes do clear calls intentionally.
@@ -44,8 +53,8 @@ Executed actual new `attach`/`receive` methods with transport/decryption stubs a
 1. A/B legacy/new under same devices/network/video, two participants, with camera off and empty versus populated chat.
 2. Capture privacy-safe numeric stats: movie capture dimensions/FPS; outbound bitrate/FPS/qualityLimitationReason/encode time; inbound loss/jitter/FPS/freezes/decode time; selected candidate type/protocol and RTT; buffer depth. No SDP, IPs, keys or media URLs in committed logs.
 3. Timestamp click, presenter receive, extension result, guest ack/state and first visible resulting frame. Distinguish actual source pause from delayed captured image.
-4. Decouple authenticated frame dispatch from slow playback work while preserving ordered validation, epoch checks and bounded source serialization. Use playback deltas, avoid duplicate updates and unchanged chat decrypts. Keep encryption.
-5. Tune motion capture/adaptive sender only after measurements; blindly forcing bitrate/codecs or an extra relay may worsen quality. Verify two-device latency before claiming legacy parity.
+4. Verify implemented delta/dispatch/history fixes under real source loading and network delay. Measure balanced capture's actual dimensions/FPS rather than assuming browser compliance.
+5. Tune adaptive sender only after measurements; blindly forcing bitrate/codecs or an extra relay may worsen quality. Verify two-device latency before claiming legacy parity.
 
 ## Primary sources
 

@@ -16,12 +16,15 @@ function emit(type: string, payload: unknown, source: unknown = windowStub): voi
 describe('presenter extension bridge', () => {
   let bridge: GDriveBridge;
   const stop = jest.fn();
-  const stream = { getTracks: () => [{ stop }], getVideoTracks: () => [{ addEventListener: jest.fn() }] } as unknown as MediaStream;
+  const applyConstraints = jest.fn<(constraints: MediaTrackConstraints) => Promise<void>>(async () => {});
+  const movie = { addEventListener: jest.fn(), applyConstraints, contentHint: '' };
+  const stream = { getTracks: () => [{ stop }], getVideoTracks: () => [movie] } as unknown as MediaStream;
   const share = jest.fn<(next: Presentation | null, stream: MediaStream | null) => Promise<void>>(async () => {});
   const update = jest.fn<(next: Presentation) => Promise<void>>(async () => {});
   const capture = jest.fn<() => Promise<MediaStream>>(async () => stream);
   beforeEach(() => {
     post.mockClear(); share.mockClear(); update.mockClear(); stop.mockClear(); capture.mockClear();
+    applyConstraints.mockReset().mockResolvedValue(); movie.contentHint = '';
     Object.defineProperty(globalThis, 'window', { configurable: true, value: windowStub });
     Object.defineProperty(globalThis, 'location', { configurable: true, value: { origin } });
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { mediaDevices: { getUserMedia: capture } } });
@@ -37,6 +40,22 @@ describe('presenter extension bridge', () => {
   it('rejects foreign window messages before capture', async () => {
     emit('quiet-start', { id: crypto.randomUUID(), streamId: 'stream', room, token: crypto.randomUUID(), title: 'Movie' }, {});
     await flush(); expect(capture).not.toHaveBeenCalled();
+  });
+  it('requests motion-oriented 720p30 capture without modifying movie audio', async () => {
+    emit('quiet-start', { id: crypto.randomUUID(), streamId: 'stream', room, token: crypto.randomUUID(), title: 'Movie' });
+    await flush();
+    expect(movie.contentHint).toBe('motion');
+    expect(applyConstraints).toHaveBeenCalledWith({ width: { ideal: 1280, max: 1280 }, height: { ideal: 720, max: 720 }, frameRate: { ideal: 30, max: 30 } });
+    expect(share).toHaveBeenCalled();
+  });
+  it('keeps capture usable if a browser rejects the balanced profile', async () => {
+    const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      applyConstraints.mockRejectedValueOnce(new Error('Unsupported'));
+      emit('quiet-start', { id: crypto.randomUUID(), streamId: 'stream', room, token: crypto.randomUUID(), title: 'Movie' });
+      await flush(); expect(share).toHaveBeenCalled();
+      expect(warning).toHaveBeenCalledWith('Kindred media', { event: 'gdrive.capture_profile_unsupported' });
+    } finally { warning.mockRestore(); }
   });
   it('pins the room, keeps the extension token local, and cancels outstanding playback on stop', async () => {
     const token = crypto.randomUUID();

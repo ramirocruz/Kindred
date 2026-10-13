@@ -6,6 +6,7 @@
 </style></head><body><main>
 <p class="eyebrow">Engineering guide · source snapshot 690b645 · 13 October 2026</p>
 <h1>Understand Kindred.<br>From the big picture to the code.</h1>
+<aside class="callout"><strong>Runtime update · 13 October 2026</strong><p>This guide and its source links describe the pinned 690b645 snapshot. Newer code uses negotiated playback-only deltas with gap recovery, single-path delivery, bounded non-blocking control dispatch, unchanged-history suppression and requested 720p30 motion capture. See <a href="https://github.com/ramirocruz/Kindred/blob/main/Context/performance.md">current performance notes</a>. Older full-snapshot polling descriptions below apply only to that source snapshot.</p></aside>
 <p class="intro">Browser-owned watch parties, encrypted chat, video calls and shared Google Drive playback. Start with the HLD; use the LLD to maintain the project.</p>
 <nav aria-label="Architecture chapters"><a href="#hld">High-level design</a><a href="#lld">Low-level design</a><a href="#flows">Request flows</a><a href="#contracts">Data &amp; messages</a><a href="#limits">Limits &amp; verification</a><a href="../">Open Kindred</a></nav>
 <div class="callout"><strong>Three roles, not three servers.</strong><p>A <b>member</b> is anyone admitted. The <b>coordinator/host</b> orders room-state changes. The <b>presenter</b> shares the Drive tab. They can be different people. Everyone can control playback; only the presenter can revoke its tab.</p></div>

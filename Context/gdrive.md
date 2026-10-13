@@ -9,7 +9,7 @@ Updated 2026-10-13. Extension v0.9.2; source `extensions/gdrive/`. React bridge/
 3. Chrome tabCapture produces stream ID restricted to room consumer. Local bridge acquires audio/video.
 4. Coordinator commits public presentation epoch/state; PeerScreen sends movie stream independently of camera/mic call participation.
 5. Any authenticated guest sends play/pause/seek to presenter. Bridge/worker validates tab/document/token and operates on pinned source.
-6. Request/owner/epoch checks and acknowledgements return actual playback state; polling refreshes state every 1.5 seconds.
+6. Request/owner/epoch checks and acknowledgements return actual playback state; polling refreshes state every 1.5 seconds through compact revision-checked deltas, with complete snapshot recovery/fallback.
 7. Stop/unlink/navigation/close revoke local capture capability and stale results.
 
 Token stays local, never in peer presentation snapshots. Pause never sets time; seek validates finite target/duration/seekable ranges. Foreign-extension frames are skipped; allowed player origins include observed `youtube.googleapis.com` frames. No debugger, arbitrary clicks or fully interactive iframe.
@@ -28,4 +28,4 @@ User screenshot: “Receiving end does not exist” indicates no receiving conte
 
 Tests cover helper labels, encrypted simulated guest→presenter controls, source pause/seek, cancellation/epochs and media cleanup. Real authenticated Drive guest audio/video remains unverified. See [testing](testing.md), [legacy lessons](archive/legacy-lessons.md).
 
-User reports lag on real host/guest GDrive session versus legacy. Source comparison and controlled diagnostics confirm redundant full-history playback snapshots and incoming dispatch blocked by pending controls; actual media bottleneck not measured. See [performance](performance.md). Do not claim performance parity from previous fixtures.
+User reports lag on real host/guest GDrive session versus legacy. Remediation removes baseline redundant full-history playback snapshots and blocked receive dispatch, and requests balanced movie capture. Stop/re-share after page refresh; extension unchanged. Actual media bottleneck/improvement not measured. See [performance](performance.md). Do not claim performance parity from fixtures.

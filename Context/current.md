@@ -1,6 +1,6 @@
 # Current Kindred
 
-Updated 2026-10-13. Evidence revision: `ff2a75c`. Legacy app remains separate and unchanged.
+Updated 2026-10-13. Baseline evidence revision: `ff2a75c`; current performance remediation described below. Legacy app remains separate and unchanged.
 
 ## Implemented
 
@@ -11,12 +11,13 @@ Updated 2026-10-13. Evidence revision: `ff2a75c`. Legacy app remains separate an
 - Everyone can control compatible playback; coordinator and presenter are distinct roles.
 - Camera/microphone call lifecycle, devices initially off, local-only mirror and one incoming audio renderer.
 - GDrive extension v0.9.2: debugger-free tab capture, pinned source player, authenticated guest playback controls and presenter-only unlink.
+- Performance remediation: compact revision-checked playback deltas, single delivery path, non-blocking bounded control dispatch, unchanged-history suppression and requested 720p30 motion capture. Real Drive stutter resolution unverified.
 - Custom room name and short UUID code appear in extension picker/header; tab title follows room name and resets on leave.
 - Resizable movie/sidebar divider, compact translucent bottom chat, animated reactions, fullscreen retaining participants.
 
 ## Verified scope
 
-62 Jest tests, strict typecheck and Pages build pass at the runtime evidence revision; documentation compaction adds two hygiene tests, all 64 pass locally. Local browser tests cover room/chat, ordinary host succession and selected UI interactions. GDrive guest commands/media cleanup have automated fixture coverage, not real Drive audio/video proof. See [testing](testing.md).
+72 Jest tests, strict typecheck and Pages build pass after performance remediation. Local browser tests cover room/chat, ordinary host succession and selected UI interactions. GDrive guest commands/media cleanup and capture profile have automated fixture coverage, not real Drive audio/video proof. See [testing](testing.md).
 
 ## Public deployment
 

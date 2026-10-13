@@ -39,3 +39,7 @@ Verified: focused Jest coverage, production build, local room/chat browser check
 Open the [hosted guide](https://ramirocruz.github.io/Kindred/architecture/) or [versioned guide HTML](architecture/index.html). New HLD/LLD candidates under `.archify/architecture-kindred-{hld,lld}-20261013-155600/` are pinned to runtime source `690b645`. Published diagram HTML is a user-approved documentation asset; validation receipts remain local. GitHub Actions explicitly copies guide/HLD/LLD/previous-overview HTML into the website's `architecture/` folder, excluding all other documents and receipts.
 
 The older service/LiveKit diagram is historical, not the current runtime.
+
+## Runtime update note
+
+The pinned diagrams remain historical source snapshots. Current GDrive remediation adds negotiated playback-only deltas with sequence-gap recovery, single-path delivery, bounded asynchronous controls, unchanged-history suppression and requested 720p30 motion capture. See [current performance notes](../Context/performance.md); pinned HTML is not a live code specification.

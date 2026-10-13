@@ -7,6 +7,7 @@ import { peerOptions } from './services/peer-config';
 import type { ChatMessage } from './chat';
 import { GDriveBridge } from './services/gdrive-bridge';
 import type { DriveAction, PlaybackState, Presentation } from './services/gdrive-protocol';
+import type { BrowserRoomState } from './services/browser-room-state';
 
 export interface RoomConnection {
   chatStatus: string;
@@ -49,6 +50,7 @@ export function useRoomConnection(session: RoomSession): RoomConnection {
       onError: () => setChatStatus('Some messages could not be decrypted. Check your invite link.') });
     let room: BrowserRoom | null = null;
     let connected = false;
+    let history: BrowserRoomState['messages'] | null = null;
     const drive = new GDriveBridge(session.id, session.identity, {
       ready: () => connected,
       share: async (next, stream) => {
@@ -68,7 +70,10 @@ export function useRoomConnection(session: RoomSession): RoomConnection {
         const options = peerOptions(import.meta.env.VITE_PEER_SERVER_URL || '',
           import.meta.env.VITE_ICE_SERVERS || '[]', import.meta.env.VITE_RELAY_ONLY === 'true');
         room = new BrowserRoom(session, options, {
-          onState: (state) => { setMembers(state.members); setRoomName(state.name); setHostId(state.hostId); setPresentation(state.presentation); drive.reconcile(state.presentation); void inbox.receive('history', state.messages); },
+          onState: (state) => {
+            setMembers(state.members); setRoomName(state.name); setHostId(state.hostId); setPresentation(state.presentation); drive.reconcile(state.presentation);
+            if (history !== state.messages) { history = state.messages; void inbox.receive('history', history); }
+          },
           onStatus: (next) => { connected = next === 'Connected'; setStatus(next); }, onStreams: setStreams,
           onScreen: setScreen, onDriveControl: (command) => drive.control(command),
           onReaction: (emoji) => setReaction({ emoji, id: ++reactionId.current }),

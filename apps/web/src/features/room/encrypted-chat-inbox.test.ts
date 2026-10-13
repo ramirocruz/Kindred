@@ -11,6 +11,17 @@ async function wireMessage(key: CryptoKey, text: string): Promise<unknown> {
 }
 
 describe('encrypted chat inbox', () => {
+  it('does not decrypt and republish identical history snapshots', async () => {
+    const key = await createChatKey(), onMessages = jest.fn();
+    const inbox = new EncryptedChatInbox({ key, roomId, onMessages, onError: jest.fn() });
+    const history = [await wireMessage(key, 'Retained')];
+    await inbox.receive('history', history);
+    await inbox.receive('history', JSON.parse(JSON.stringify(history)) as unknown);
+    expect(onMessages).toHaveBeenCalledTimes(1);
+    await inbox.receive('history', [...history, await wireMessage(key, 'Changed')]);
+    expect(onMessages).toHaveBeenCalledTimes(2);
+    inbox.dispose();
+  });
   it('keeps history and live messages ordered and deduplicates redelivery', async () => {
     const key = await createChatKey();
     const onMessages = jest.fn();

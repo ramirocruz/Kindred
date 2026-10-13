@@ -82,6 +82,13 @@ export class GDriveBridge {
       const constraint = { mandatory: { chromeMediaSource: 'tab', chromeMediaSourceId: payload.streamId } };
       // Chrome's extension-issued tab constraints are not standard DOM typings.
       stream = await navigator.mediaDevices.getUserMedia({ video: constraint as MediaTrackConstraints, audio: constraint as MediaTrackConstraints });
+      const movie = stream.getVideoTracks()[0];
+      if (movie) {
+        movie.contentHint = 'motion';
+        // Bound movie capture cost; leave audio and browser codec/congestion control untouched.
+        try { await movie.applyConstraints({ width: { ideal: 1280, max: 1280 }, height: { ideal: 720, max: 720 }, frameRate: { ideal: 30, max: 30 } }); }
+        catch { console.warn('Kindred media', { event: 'gdrive.capture_profile_unsupported' }); }
+      }
       if (this.closed || generation !== this.generation) throw new Error('Sharing was cancelled.');
       this.token = payload.token; this.stream = stream;
       this.presentation = { ownerId: this.identity, epoch: crypto.randomUUID(), title: payload.title, playback: null, error: '' };
