@@ -8,6 +8,7 @@ Read [README.md](README.md) and [current.md](current.md) for every task. Then se
 | Room creation, admission, succession | [browser-authority.md](browser-authority.md) |
 | Encryption, privacy, call quality | [privacy-migration.md](privacy-migration.md) |
 | Player, room picker, extension, audio | [gdrive.md](gdrive.md) |
+| Slow video or playback controls | [performance.md](performance.md) |
 | UI fidelity / pending parity | [ui-parity.md](ui-parity.md) |
 | Product and stack choices | [decisions.md](decisions.md) |
 | Test results and limits | [testing.md](testing.md) |

@@ -4,6 +4,7 @@ Compacted 2026-10-13. Keep latest 10 milestones; older history belongs in [archi
 
 | Milestone | Evidence / next work |
 | --- | --- |
+| GDrive lag diagnosis | Legacy/new paths compared; snapshot-volume benchmark and actual-handler replay confirm inefficient updates/control blocking. No live media bottleneck proven or runtime change; see performance.md. |
 | Context compaction/tracking | 122,080→29,590 Markdown bytes before final evidence update (76% reduction), 890→326 lines. Active facts deduplicated, historical summaries archived, sanitized Context now Git-trackable. AGENTS requires related-note skim/correction every update. 64 tests/typecheck/Pages build/diff checks pass; no Context files in website artifact. No runtime change. |
 | ff2a75c named rooms | Picker/header share room name and short code; title resets on leave; v0.9.2 package live. 62 tests pass. Real extension popup/capture pending. |
 | a21357a detailed architecture | HLD/LLD diagrams + component/wire/flow guide published; 61 tests and Archify automated gates pass. |

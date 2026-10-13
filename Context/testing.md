@@ -21,6 +21,8 @@ Updated 2026-10-13. Evidence applies to listed revisions, not every later change
 
 Real two-device camera/mic and Drive audio/video; audible echo/noise/latency measurement; TURN-only/difficult networks; autoplay/device-denial/reconnect; host loss with independent presenter; background tabs/long sessions; dependency/security review and membership revocation.
 
+Latency diagnosis: native encryption synthetic snapshot-size benchmark and actual attach/receive replay with transport/decryption stubs confirm volume growth and queued pause/ping behind seek. Not live network/video measurements. Detailed cases and limits: [performance](performance.md). No runtime fix implemented.
+
 ## Context compaction
 
 **Verified:** 64 Jest cases/21 suites, strict typecheck, Pages build and diff check pass. New tests enforce active-note budgets, relative links and absence of machine paths/invite keys/private accounts. Git ignore rule removed; built artifact has no Context files. Original untracked notes backed up outside Git; no runtime behavior changed. These checks are targeted hygiene, not a comprehensive secret/security audit.

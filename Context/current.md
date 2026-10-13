@@ -24,7 +24,7 @@ Updated 2026-10-13. Evidence revision: `ff2a75c`. Legacy app remains separate an
 
 ## Pending priorities
 
-1. Real authenticated Drive presenter/guest audio-video and playback verification on two devices.
+1. Diagnose reported GDrive guest/control lag versus legacy with live stats and A/B tests; confirmed code inefficiencies and unknown media bottleneck are in [performance](performance.md). Two-device media verification remains required.
 2. Actual camera/microphone quality, difficult networks/TURN, cleanup and background timer tests.
 3. YouTube, web-video, personal-file and interactive screen-sharing adapters; their working migration is not yet implemented.
 4. Participant dragging and remaining source-backed UI parity.

@@ -27,3 +27,5 @@ Run `npm run package:extension` after source edits. Reload updated extension and
 User screenshot: “Receiving end does not exist” indicates no receiving content bridge at message time; refresh after extension reload is a next check, not a proven root-cause fix. Actual installed extension/capture was not inspected in that task.
 
 Tests cover helper labels, encrypted simulated guest→presenter controls, source pause/seek, cancellation/epochs and media cleanup. Real authenticated Drive guest audio/video remains unverified. See [testing](testing.md), [legacy lessons](archive/legacy-lessons.md).
+
+User reports lag on real host/guest GDrive session versus legacy. Source comparison and controlled diagnostics confirm redundant full-history playback snapshots and incoming dispatch blocked by pending controls; actual media bottleneck not measured. See [performance](performance.md). Do not claim performance parity from previous fixtures.
