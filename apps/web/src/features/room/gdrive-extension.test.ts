@@ -18,6 +18,17 @@ function fixture(): { video: { currentTime: number; paused: boolean; pause: Retu
 }
 
 describe('legacy-derived extension media operations', () => {
+  it('labels rooms by custom name and stable short room code, never tab IDs or keys', () => {
+    const source = readFileSync(new URL('room-url.js', extension), 'utf8').replaceAll('export ', '');
+    const label = runInNewContext(`${source}; roomLabel`, { URL, URLSearchParams }) as (tab: { url: string; title?: string; id?: number }) => string | null;
+    const id = '12345678-1234-4234-8234-123456789abc';
+    const url = `http://localhost:5173/#invite=${id}&chatKey=secret`;
+    expect(label({ url, title: 'Friday Night Picks · Kindred', id: 211476648 })).toBe('Friday Night Picks · Room 12345678');
+    expect(label({ url, title: 'Kindred — Watch together' })).toBe('Kindred room · Room 12345678');
+    expect(label({ url })).toBe('Kindred room · Room 12345678');
+    expect(label({ url: 'https://evil.example/' })).toBeNull();
+    expect(label({ url, title: '<Movie night> · Kindred' })).toBe('<Movie night> · Room 12345678');
+  });
   it('pauses without resetting the source timeline', async () => {
     const { video, operation } = fixture();
     const result = await operation({ action: 'pause' }, 'video');

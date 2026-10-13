@@ -33,7 +33,7 @@ The migration app deploys separately from the legacy ChatGPT-hosted site:
 
 In GitHub, open **Settings → Pages → Source** and choose **GitHub Actions** once. Pushes to `main` run typecheck/tests, package the GDrive extension, build the app and publish both pages. You can also run **Deploy Kindred to Pages** manually from **Actions**. Links are deployment targets; check the workflow for actual deployment success.
 
-`npm run build:pages` produces the Pages artifact in `apps/web/dist/`, including architecture and extension downloads. Normal `npm run dev` stays at `/`; Pages uses `/Kindred/`. Context, environment files and validation receipts are never published. Reinstall/reload Kindred GDrive v0.9.1 to use hosted rooms.
+`npm run build:pages` produces the Pages artifact in `apps/web/dist/`, including architecture and extension downloads. Normal `npm run dev` stays at `/`; Pages uses `/Kindred/`. Context, environment files and validation receipts are never published. Reinstall/reload Kindred GDrive v0.9.2 and refresh room tabs after updating.
 
 ## Room hosts and leaving
 
@@ -78,7 +78,7 @@ The original Drive tab becomes silent during capture; movie audio is rendered on
 
 This migration follows the legacy accessible-video/frame discovery and pinned-document playback commands. Unsupported/protected players fail explicitly. Actual authenticated Drive capture and remote audiovisual delivery still need manual verification; unit tests are not proof of these.
 
-Extension source: `extensions/gdrive/`. You can also load that folder directly. Run `npm run package:extension` after editing it to refresh the download. Localhost and 127.0.0.1 on port 5173 and the Kindred GitHub Pages path are allowed; other origins need explicit extension allowlist changes. The v0.9.1 GDrive build is for new React rooms, not legacy invitations.
+Extension source: `extensions/gdrive/`. You can also load that folder directly. Run `npm run package:extension` after editing it to refresh the download. Localhost and 127.0.0.1 on port 5173 and the Kindred GitHub Pages path are allowed; other origins need explicit extension allowlist changes. The v0.9.2 GDrive build is for new React rooms, not legacy invitations. Its room picker shows the custom room name and short room code, also visible in the room header; it never displays the invitation key.
 
 ## Connection settings
 
@@ -110,7 +110,7 @@ The production website is generated in `apps/web/dist/`. `npm run lint` currentl
 
 The original landing page, source segments, compact dialogs, translucent chat/reactions, adjustable divider, fullscreen layout and participant cards remain. Encrypted room chat, shared reactions and host succession now use WebRTC.
 
-GDrive capture/playback integration is implemented with a new v0.9.1 extension and requires real Drive/two-device verification. YouTube/web-video/personal-file delivery and interactive screen-sharing pairing remain pending; their submission/player actions remain disabled. Interactive setup still downloads the legacy v0.8.0 build, not a working React integration. The legacy ChatGPT site remains unchanged; Pages is a separate migration deployment.
+GDrive capture/playback integration is implemented with a new v0.9.2 extension and requires real Drive/two-device verification. YouTube/web-video/personal-file delivery and interactive screen-sharing pairing remain pending; their submission/player actions remain disabled. Interactive setup still downloads the legacy v0.8.0 build, not a working React integration. The legacy ChatGPT site remains unchanged; Pages is a separate migration deployment.
 
 The former room-service source and LiveKit dependencies are removed; previous versions are recoverable in Git. Ignored local environment/build files from earlier development may still exist and are unused.
 

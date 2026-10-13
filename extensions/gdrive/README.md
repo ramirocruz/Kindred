@@ -12,4 +12,4 @@ Playback uses an accessible HTML video in a supported Drive frame. Unsupported/p
 
 Chrome silences the source tab while captured. Audio is played once in Kindred after you unmute its player. Microphone processing never touches movie audio.
 
-v0.9.1 includes the GitHub Pages origin, restricted to the Kindred path in application checks. Other hosting domains/ports require explicit manifest and room-origin allowlist updates. Interactive screen-sharing migration is separate; it is not included here.
+v0.9.2 labels rooms by custom name and short room code, matching the room header. Reload the extension and refresh existing Kindred tabs after updating. The GitHub Pages origin is restricted to the Kindred path in application checks. Other hosting domains/ports require explicit manifest and room-origin allowlist updates. Interactive screen-sharing migration is separate; it is not included here.

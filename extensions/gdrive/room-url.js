@@ -1,4 +1,11 @@
 const origins = new Set(['http://localhost:5173', 'http://127.0.0.1:5173', 'https://kindred.cheekyscout32.chatgpt.site']);
+export function roomLabel(tab) {
+  const id = roomId(tab.url);
+  if (!id) return null;
+  const title = (tab.title || '').replace(/ · Kindred$/, '').trim();
+  const name = !title || title === 'Kindred — Watch together' ? 'Kindred room' : title;
+  return `${name} · Room ${id.slice(0, 8)}`;
+}
 export function roomOriginAllowed(url) {
   try {
     const parsed = new URL(url);

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sources } from "../local-room";
 import type { Source } from "../local-room";
 import type { RoomSession } from '../services/session';
@@ -53,6 +53,13 @@ export function WatchRoom({
   onLeave: () => void;
 }): React.JSX.Element {
   const connection = useRoomConnection(room);
+  const roomCode = room.invite.slice(0, 8);
+  // Chrome's extension picker reads the tab title, not React state.
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = `${connection.roomName} · Kindred`;
+    return () => { document.title = previousTitle; };
+  }, [connection.roomName]);
   const inviteUrl = `${location.origin}${location.pathname}${buildInviteFragment(room.invite, room.chatInviteSecret)}`;
   const [source, setSource] = useState<Source | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(280);
@@ -88,7 +95,7 @@ export function WatchRoom({
         </button>
         <span className="room-pill">
           <i />
-          {connection.roomName} · {connection.status} · {connection.members.length} here
+          {connection.roomName} · Room {roomCode} · {connection.status} · {connection.members.length} here
         </span>
         <div className="header-actions">
           <button
