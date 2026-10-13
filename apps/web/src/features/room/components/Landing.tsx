@@ -70,7 +70,7 @@ export function Landing({
           </article>
         </div>
         <p className="preview-note">
-          Private rooms and encrypted chat · media playback and calls are coming next.
+          Private rooms and encrypted chat · movie playback is being migrated.
         </p>
       </section>
       {modal === "create" && (

@@ -28,7 +28,7 @@ export function RoomDashboard({ room, dispatch }: RoomDashboardProps): React.JSX
       <section className="mx-auto mt-6 grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section className="rounded-3xl border border-white/10 bg-[#0d1f19] p-3 shadow-2xl shadow-black/30">
           <div className="grid aspect-video place-items-center rounded-2xl bg-[radial-gradient(circle_at_center,#234a3b,#07100d_65%)]">
-            <p className="text-center text-sm text-stone-300">LiveKit media renders here after room service configuration.</p>
+            <p className="text-center text-sm text-stone-300">Local fixture preview.</p>
           </div>
           <div className="mt-3 flex items-center gap-3">
             <button

@@ -61,8 +61,8 @@ export function WatchRoom({
   const [reactions, setReactions] = useState(room.reactions);
   const [interactive, setInteractive] = useState(false);
   const [zoom, setZoom] = useState(false);
-  const [reaction, setReaction] = useState<{ emoji: string; id: number } | null>(null);
-  const reactionSequence = useRef(0);
+  const [finishedReaction, setFinishedReaction] = useState<number | null>(null);
+  const reaction = connection.reaction?.id === finishedReaction ? null : connection.reaction;
   const [notice, setNotice] = useState("");
   const stage = useRef<HTMLDivElement>(null);
   const copy = source ? sourceCopy[source] : null;
@@ -82,7 +82,7 @@ export function WatchRoom({
         </button>
         <span className="room-pill">
           <i />
-          {room.name} · {connection.status} · {connection.members.length} here
+          {connection.roomName} · {connection.status} · {connection.members.length} here
         </span>
         <div className="header-actions">
           <button
@@ -170,7 +170,7 @@ export function WatchRoom({
                 className="reaction-pop"
                 role="status"
                 aria-label={`Reaction ${reaction.emoji}`}
-                onAnimationEnd={() => setReaction((current) => current?.id === reaction.id ? null : current)}
+                onAnimationEnd={() => setFinishedReaction(reaction.id)}
               >
                 {reaction.emoji}
               </span>
@@ -214,7 +214,7 @@ export function WatchRoom({
                 <button
                   key={emoji}
                   aria-label={`React ${emoji}`}
-                  onClick={() => setReaction({ emoji, id: ++reactionSequence.current })}
+                  onClick={() => connection.react(emoji)}
                 >
                   {emoji}
                 </button>
@@ -229,7 +229,7 @@ export function WatchRoom({
               <h2>In the room {connection.members.length}</h2>
               <button onClick={() => setModal("invite")}>+ Invite</button>
             </div>
-            <MediaCall session={room} members={connection.members}>
+            <MediaCall session={room} connection={connection}>
             {connection.members.some((member) => member.id === room.identity) && <div className={`call-card ${zoom ? "enlarged" : ""}`}>
               <span className="member-label">
                 {room.displayName}
@@ -274,6 +274,7 @@ export function WatchRoom({
           <p className="sidebar-note">
             {connection.status} · private invitation room.
           </p>
+          <p className="sidebar-note">Host: {connection.members.find((member) => member.id === connection.hostId)?.displayName ?? 'Connecting…'}</p>
           <RoomChat connection={connection} />
         </aside>
       </div>
@@ -313,13 +314,13 @@ export function WatchRoom({
                 <span />
               </button>
             </div>
-            <p className="preview-note">Settings apply to this local preview. Guest permissions require online rooms.</p>
+            <p className="preview-note">Reaction display settings apply to this browser. Everyone shares room controls.</p>
             </>
           ) : (
             <>
             <p className="dialog-description">
               {modal === "invite"
-                ? "Anyone with this full link can join and decrypt chat until the room expires after 24 hours or a service restart. Keep it private."
+                ? "Anyone with this full link can join and read chat. Keep it private. The room lasts while members stay connected; the eldest member takes over if the host leaves."
                 : "GDrive uses playback controls. Screen share offers viewing or interactive control. Extension pairing is being migrated; the new room cannot link a tab yet."}
             </p>
             <label className="field">Room link<input readOnly value={inviteUrl} onFocus={(event) => event.target.select()} /></label>

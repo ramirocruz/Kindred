@@ -12,13 +12,9 @@
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
-    "@livekit/components-react": "^2.9.9",
-    "@livekit/components-styles": "^1.1.8",
-    "@livekit/protocol": "^1.39.2",
-    "livekit-client": "^2.16.1",
+    "peerjs": "^1.5.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "socket.io-client": "^4.8.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {

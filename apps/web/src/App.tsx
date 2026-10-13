@@ -17,12 +17,12 @@ export function App(): React.JSX.Element {
       const session = await openRoom(input, invitation);
       history.replaceState(null, '', buildInviteFragment(session.invite, session.chatInviteSecret));
       setRoom(session);
-    } catch { setError('Could not enter the room. Start the room service or check your invitation.'); }
+    } catch { setError('Could not enter the room. Check your name and full invitation.'); }
     finally { setPending(false); }
   }
   return <>
     {room ? <WatchRoom room={room} onLeave={() => { setRoom(null); history.replaceState(null, '', location.pathname); }} />
       : <Landing onCreate={(input) => void enter(input)} onJoin={(name, invite) => void enter({ displayName: name, name: '', reactions: true }, invite)} />}
-    {(error || pending) && <p className="connection-notice" role="status">{pending ? 'Connecting to room service…' : error}</p>}
+    {(error || pending) && <p className="connection-notice" role="status">{pending ? 'Preparing room…' : error}</p>}
   </>;
 }
